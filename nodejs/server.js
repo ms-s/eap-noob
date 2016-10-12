@@ -33,6 +33,32 @@ app.use(express.static(__dirname + '/public'));
 
 require('./config/passport')(passport); // pass passport for configuration
 
+// global map for saving user -> connection
+var connMap = {};
+
+var ws = require('nodejs-websocket');
+var property = {
+  secure:true,
+  key: fs.readFileSync('./ssl/server.key'),
+  cert: fs.readFileSync('./ssl/server.crt'),
+  ca: fs.readFileSync('./ssl/ca.crt'),
+  requestCert: true,
+  rejectUnauthorized: false
+};
+var server = ws.createServer(property, function (conn) {
+    console.log("New connection requested to: " + conn.path);
+    console.log(conn.path);
+    // simple userID, anything after '/'
+    // should use database here
+    var userID = conn.path.substring(1);
+    conn.on("close", function (code, reason) {
+        console.log("Connection closed")
+    });
+    connMap[userID] = conn;
+    // connMap["JANE"] = conn;
+    console.log(connMap);
+}).listen(9000);
+
 // set up our express application
 app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
