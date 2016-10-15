@@ -87,7 +87,29 @@ module.exports = function(app, passport) {
     }
     });
 
-    
+    app.get('/devices', isLoggedIn, function(req, res) {
+        userID = req.user.userID;
+        serverDB = new sqlite3.Database(serverDBPath);
+        var deviceList = [];
+        serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', function(err, rows) {
+            if (err) {
+                res.render('profile.ejs', {
+                    Devices: deviceList
+                });
+                serverDB.close();
+                return;
+            }
+            rows.forEach(row) {
+                deviceList.push([row.DeviceID, row.DeviceName, row.DeviceState, row.Description, row.Image]);
+            }
+            res.render('profile.ejs', {
+                Devices: deviceList
+            });
+            serverDB.close();
+            return;
+        });
+    });
+
     app.get('/insertDevice', function(req, res) {
         //console.log(req);
         var peer_id = req.query.PeerId;
@@ -256,7 +278,7 @@ module.exports = function(app, passport) {
     // });
 
     app.get('/profile', isLoggedIn, function(req, res) {
-        userID = req.user.userID
+        userID = req.user.userID;
         serverDB = new sqlite3.Database(serverDBPath);
         var userName = 'Error';
         var notificationList = [];
