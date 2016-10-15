@@ -99,15 +99,47 @@ module.exports = function(app, passport) {
                 serverDB.close();
                 return;
             }
-            rows.forEach(row) {
+            rows.forEach(function(row) {
                 deviceList.push([row.DeviceID, row.DeviceName, row.DeviceState, row.Description, row.Image]);
-            }
+            });
             res.render('profile.ejs', {
                 Devices: deviceList
             });
             serverDB.close();
             return;
         });
+    });
+
+    // Don't know if "isLoggedIn" works here
+    app.post('/device', isLoggedIn, function(req, res){
+        var query = req._parsedUrl.query;
+        var parts = query.split("=");
+        var deviceID = parseInt(parts[1]);
+        var deviceName = 'Error';
+        var deviceState = 'N/A';
+        var description = 'N/A';
+        var image = 'N/A';
+        serverDB = new sqlite3.Database(serverDBPath);
+        serverDB.all('select DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, rows) {
+            if (!err) {
+                rows.forEach(function(row) {
+                    deviceName = row.DeviceName;
+                    deviceState = row.DeviceState;
+                    description = row.Description;
+                    image = row.Image;
+                });
+            }
+            res.json({
+                "DeviceName": deviceName,
+                "DeviceState": deviceState,
+                "Description": description,
+                "Image": image
+            });
+            serverDB.close();
+        });
+        // Will directly sending a string of json be better?
+
+        // var parts = query.split("&");
     });
 
     app.get('/insertDevice', function(req, res) {
@@ -294,9 +326,10 @@ module.exports = function(app, passport) {
                 serverDB.close();
                 return;
             }
-            userRows.forEach(row) {
+            userRows.forEach(function(row) {
                 userName = row.UserName;
-            }
+
+            });
             serverDB.all('select NotificationID, DeviceID, NotificationType, Description from Notification where UserID = ?', userID, function(err, notificationRows) {
                 if (err) {
                     res.render('profile.ejs', {
@@ -307,9 +340,10 @@ module.exports = function(app, passport) {
                     serverDB.close();
                     return;
                 }
-                notificationRows.forEach(row) {
+                notificationRows.forEach(function(row) {
                     notificationList.push([row.NotificationID, row.DeviceID, row.NotificationType, row.Description]);
-                }
+                });
+
                 serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
                     if (err) {
                         res.render('profile.ejs', {
@@ -320,9 +354,9 @@ module.exports = function(app, passport) {
                         serverDB.close();
                         return;
                     }
-                    deviceRows.forEach(row) {
+                    deviceRows.forEach(function(row) {
                         deviceList.push([row.DeviceID, row.DeviceName, row.Image, row.Description]);
-                    }
+                    });
                     // successful
                     res.render('profile.ejs', {
                         UserName: userName,
@@ -331,7 +365,6 @@ module.exports = function(app, passport) {
                     });
                     serverDB.close();
                     return;
-                }
                 });
             });
         });
