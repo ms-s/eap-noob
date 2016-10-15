@@ -18,6 +18,8 @@ var db;
 
 var configDB = require('./config/database.js');
 var conn_str = configDB.dbPath;
+var serverDBPath = configDB.serverDBPath;
+var serverDB;
 
 var fs = require('fs');
 var https = require('https');
@@ -76,13 +78,51 @@ app.use(flash()); // use connect-flash for flash messages stored in session
 require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
 
 // launch ======================================================================
-  db = new sqlite3.Database(conn_str);
-  db.serialize(function() {
-  	db.run('CREATE TABLE  IF NOT EXISTS users ( id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT );');
-  	db.run('CREATE TABLE  IF NOT EXISTS devices (PeerID TEXT, serv_state INTEGER, PeerInfo TEXT, Noob TEXT, Hoob TEXT, Hint TEXT,errorCode INTEGER ,UserName TEXT, PRIMARY KEY (PeerID, UserName));');
-	
-  	db.close();
-  });
+db = new sqlite3.Database(conn_str);
+db.serialize(function() {
+	db.run('CREATE TABLE  IF NOT EXISTS users ( id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT );');
+	db.run('CREATE TABLE  IF NOT EXISTS devices (PeerID TEXT, serv_state INTEGER, PeerInfo TEXT, Noob TEXT, Hoob TEXT, Hint TEXT,errorCode INTEGER ,UserName TEXT, PRIMARY KEY (PeerID, UserName));');
+
+	db.close();
+});
+
+// create database for non-authentification purpose
+serverDB = new sqlite3.Database(serverDBPath);
+serverDB.serialize(function() {
+  serverDB.run('create table if not exists User \
+    (UserID integer primary key autoincrement, \
+    UserName text, \
+    Password text);');
+
+  serverDB.run('create table if not exists Device \
+    (DeviceID integer primary key autoincrement, \
+    DeviceName text, \
+    DeviceState text, \
+    Description text, \
+    UserID integer, \
+    Image text);');
+
+  serverDB.run('create table if not exists Notification \
+    (NotificationID integer primary key autoincrement, \
+    DeviceID integer, \
+    Timestamp text, \
+    NotificationType text, \
+    Description text);');
+
+  serverDB.run('create table if not exists ContentList \
+    (ContentID integer primary key autoincrement, \
+    ContentName text, \
+    ContentType text, \
+    ContentURL text, \
+    Source text, \
+    UserID integer\
+    );');
+
+  serverDB.close();
+});
+
+
+
 
 https.createServer(options, app).listen(8080, function () {
    console.log('Started!');
