@@ -110,6 +110,38 @@ module.exports = function(app, passport) {
         });
     });
 
+    // Don't know if "isLoggedIn" works here
+    app.post('/device', isLoggedIn, function(req, res){
+        var query = req._parsedUrl.query;
+        var parts = query.split("=");
+        var deviceID = parseInt(parts[1]);
+        var deviceName = 'Error';
+        var deviceState = 'N/A';
+        var description = 'N/A';
+        var image = 'N/A';
+        serverDB = new sqlite3.Database(serverDBPath);
+        serverDB.all('select DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, rows) {
+            if (!err) {
+                rows.forEach(row) {
+                    deviceName = row.DeviceName;
+                    deviceState = row.DeviceState;
+                    description = row.Description;
+                    image = row.Image;
+                }
+            }
+            res.json({
+                "DeviceName": deviceName;
+                "DeviceState": deviceState;
+                "Description": description;
+                "Image": image;
+            });
+            serverDB.close();
+        });
+        // Will directly sending a string of json be better?
+
+        // var parts = query.split("&");
+    });
+
     app.get('/insertDevice', function(req, res) {
         //console.log(req);
         var peer_id = req.query.PeerId;
