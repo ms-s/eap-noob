@@ -94,6 +94,7 @@ module.exports = function(app, passport) {
         serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', function(err, rows) {
             if (err) {
                 res.render('profile.ejs', {
+                    UserName: userID,
                     Devices: deviceList
                 });
                 serverDB.close();
@@ -103,6 +104,7 @@ module.exports = function(app, passport) {
                 deviceList.push([row.DeviceID, row.DeviceName, row.DeviceState, row.Description, row.Image]);
             });
             res.render('profile.ejs', {
+                UserName: userID,
                 Devices: deviceList
             });
             serverDB.close();
@@ -111,7 +113,7 @@ module.exports = function(app, passport) {
     });
 
     // Don't know if "isLoggedIn" works here
-    app.post('/device', isLoggedIn, function(req, res){
+    app.get('/device', isLoggedIn, function(req, res){
         var query = req._parsedUrl.query;
         var parts = query.split("=");
         var deviceID = parseInt(parts[1]);
@@ -129,6 +131,7 @@ module.exports = function(app, passport) {
                     image = row.Image;
                 });
             }
+            // change to render
             res.json({
                 "DeviceName": deviceName,
                 "DeviceState": deviceState,
@@ -310,13 +313,13 @@ module.exports = function(app, passport) {
     // });
 
     app.get('/profile', isLoggedIn, function(req, res) {
-        userID = req.user.userID;
         serverDB = new sqlite3.Database(serverDBPath);
-        var userName = 'Error';
+        var userID;
+        var userName = req.user.username;
         var notificationList = [];
         var deviceList = [];
 
-        serverDB.all('select UserName form User where UserID = ?', userID, function(err, userRows) {
+        serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
             if (err) {
                 res.render('profile.ejs', {
                     UserName: userName,
@@ -327,8 +330,9 @@ module.exports = function(app, passport) {
                 return;
             }
             userRows.forEach(function(row) {
-                userName = row.UserName;
-
+                userID = row.UserID;
+                console.log('userID');
+                console.log(userID);
             });
             serverDB.all('select NotificationID, DeviceID, NotificationType, Description from Notification where UserID = ?', userID, function(err, notificationRows) {
                 if (err) {
@@ -341,8 +345,15 @@ module.exports = function(app, passport) {
                     return;
                 }
                 notificationRows.forEach(function(row) {
-                    notificationList.push([row.NotificationID, row.DeviceID, row.NotificationType, row.Description]);
+                    // notificationList.push([row.NotificationID, row.DeviceID, row.NotificationType, row.Description]);
+                    notificationList.push({
+                        NotificationList: row.NotificationID,
+                        DeviceID: row.DeviceID,
+                        NotificationType: row.NotificationType,
+                        Description: row.Description});
                 });
+                console.log('notificationList');
+                console.log(notificationList);
 
                 serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
                     if (err) {
@@ -355,9 +366,19 @@ module.exports = function(app, passport) {
                         return;
                     }
                     deviceRows.forEach(function(row) {
-                        deviceList.push([row.DeviceID, row.DeviceName, row.Image, row.Description]);
+                        deviceList.push({
+                            DeviceID: row.DeviceID,
+                            DeviceName: row.DeviceName,
+                            Image: row.Image,
+                            Description: row.Description});
                     });
+                    console.log('deviceList');
+                    console.log(deviceList);
+
                     // successful
+                    console.log('/profile successful');
+                    console.log(userID);
+                    console.log(notificationList);
                     res.render('profile.ejs', {
                         UserName: userName,
                         NotificationList: notificationList,
