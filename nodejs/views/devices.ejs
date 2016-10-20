@@ -11,7 +11,7 @@
     <script type="text/javascript" src="/qrcode.js"></script>
     <style>
         .demo-card-notification.mdl-card {
-            height: 160px;
+            height: inherit;
         }
     </style>
 </head>
@@ -58,10 +58,10 @@
         </ul>
     </main>
 
-    <footer class="mdl-mini-footer"
+    <footer class="footer"
             style="background-color: #ffffff;
                     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 1);
-                    padding-top: 0px; padding-right: 0px; padding-left: 0px; padding-bottom: 28px">
+                    padding-top: 0px; padding-right: 0px; padding-left: 0px; padding-bottom: 0px">
         <div class="container-fluid" style="width:100%">
             <div class="row">
                 <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
@@ -117,10 +117,11 @@
     }
 
     function gotoDevice(deviceID) {
-        var xhttp = new XMLHttpRequest();
+        //var xhttp = new XMLHttpRequest();
         var url = "/device?deviceID=" + deviceID
-        xhttp.open("POST", url, true)
-        xhttp.send()
+        //xhttp.open("POST", url, true)
+        //xhttp.send()
+        window.location = url
     }
 
 </script>

@@ -131,9 +131,9 @@
                     <div class="mdl-card mdl-shadow--4dp" style="width:100%;">
                         <div class="mdl-card__title">
                             <h2 class="mdl-card__title-text">
-                                <%if (notification.NotificationType === "softwareupdate") {%>
+                                <%if (notification.NotificationType === "SoftwareUpdate") {%>
                                     Software Update
-                                <%} else if (notification.NotificationType === "videolistupdate") {%>
+                                <%} else if (notification.NotificationType === "VideoListUpdate") {%>
                                     New Vedio for You
                                 <%} else {%>
                                     New Audio for You
@@ -146,16 +146,16 @@
                         <div class="mdl-card__actions mdl-card--border">
                             <%if (notification.NotificationType === "softwareupdate") {%>
                                 <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
-                                   onclick="notificationAction(this, '<%=notification.NotificationID%>', 'details', 'softwareupdate')">
+                                   onclick="notificationAction(this, '<%=notification.NotificationID%>', 'details', 'SoftwareUpdate')">
                                     Details
                                 </a>
                                 <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
-                                   onclick="notificationAction(this, '<%=notification.NotificationID%>', 'agree', 'softwareupdate')">
+                                   onclick="notificationAction(this, '<%=notification.NotificationID%>', 'agree', 'SoftwareUpdate')">
                                     Agree
                                 </a>
                                 <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
                                    onclick="notificationAction(this, '<%=notification.NotificationID%>', 'cancel',
-                                           'softwareupdate')">
+                                           'SoftwareUpdate')">
                                     Cancel
                                 </a>
                             <%} else {%>
@@ -197,7 +197,9 @@
         </div>
 
     </main>
-    <footer class="mdl-mini-footer">
+    <footer class="footer" style="background-color: #ffffff;
+                    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 1);
+                    padding-top: 0px; padding-right: 0px; padding-left: 0px; padding-bottom: 0px">
     <div class="container-fluid" style="width:100%">
         <div class="row">
             <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
@@ -251,10 +253,12 @@
     }
 
     function gotoDevice(deviceID) {
-        var xhttp = new XMLHttpRequest();
+        // var xhttp = new XMLHttpRequest();
         var url = "/device?deviceID=" + deviceID
-        xhttp.open("POST", url, true)
-        xhttp.send()
+        // xhttp.open("POST", url, true)
+        // xhttp.send()
+
+        window.location = url
     }
 
     function gotoHome() {
