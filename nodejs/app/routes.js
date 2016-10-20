@@ -344,6 +344,11 @@ module.exports = function(app, passport) {
 
     app.get('/contentList', isLoggedIn, function(req, res) {
         serverDB = new sqlite3.Database(serverDBPath);
+        var query = req._parsedUrl.query;
+        var parts = query.split("=");
+        var userID;
+        var contentType;
+        var source;
     });
 
     app.get('/profile', isLoggedIn, function(req, res) {
