@@ -61,7 +61,7 @@
                 <%if (NotificationList.length > 0) {%>
                     <% NotificationList.forEach(function(notification) { %>
                     <div class="mdl-cell mdl-cell--4-col" id="<%=notification.NotificationID%>">
-                        <div class="mdl-card mdl-shadow--4dp" style="width:100%;">
+                        <div class="mdl-card mdl-shadow--2dp" style="width:100%;">
                             <div class="mdl-card__title">
                                 <h2 class="mdl-card__title-text">
                                     <%if (notification.NotificationType === "SoftwareUpdate") {%>
@@ -77,7 +77,7 @@
                                 <%=notification.Description %>
                             </div>
                             <div class="mdl-card__actions mdl-card--border">
-                                <%if (notification.NotificationType === "softwareupdate") {%>
+                                <%if (notification.NotificationType === "softwareUpdate") {%>
                                 <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
                                    onclick="notificationAction(this, '<%=notification.NotificationID%>', 'details', 'SoftwareUpdate')">
                                     Details
@@ -134,17 +134,17 @@
                             </li>
                             <%})%>
                         </ul>
-                        <ul class="demo-list-three mdl-list">
-                            <li class="mdl-list__item mdl-list__item--three-line">
+                        <ul class="mdl-list">
+                            <li class="mdl-list__item">
                                 <div style="margin-left:auto; margin-right:auto">
-                                    <button class="mdl-button mdl-js-button mdl-button--icon">
+                                    <button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, true)">
                                         <i class="material-icons">skip_previous</i>
                                     </button>
                                     <button id="play-button" class="mdl-button mdl-js-button mdl-button--icon" onclick="playVideo(this, false)">
                                         <i class="material-icons">play_arrow</i>
                                     </button>
                                     </button>
-                                    <button class="mdl-button mdl-js-button mdl-button--icon">
+                                    <button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, false)">
                                         <i class="material-icons">skip_next</i>
                                     </button>
                                 </div>
@@ -157,45 +157,7 @@
         </div>
     </main>
 
-    <footer class="footer"
-            style="background-color: #ffffff;
-                    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 1);
-                    padding-top: 0px; padding-right: 0px; padding-left: 0px; padding-bottom: 0px">
-        <div class="container-fluid" style="width:100%">
-            <div class="row">
-                <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
-                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;" onclick="gotohome()">
-                        <div style="height: 24px; padding: 0px">
-                            <i class="material-icons" style="color: #000000">home</i>
-                        </div>
-                        <div>
-                            <text style="font-size: 12px; color: #000000">home</text>
-                        </div>
-                    </button>
-                </div>
-                <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
-                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;" onclick="gotodevices()">
-                        <div style="height: 24px; padding: 0px">
-                            <i class="material-icons" style="color: #00695C; opacity:26%">devices</i>
-                        </div>
-                        <div>
-                            <text style="font-size: 14px; height: 12px; color: #00695C; opacity:26%">devices</text>
-                        </div>
-                    </button>
-                </div>
-                <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
-                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;">
-                        <div style="height: 24px; padding: 0px">
-                            <i class="material-icons" style="color: #000000">settings</i>
-                        </div>
-                        <div>
-                            <text style="font-size: 12px; height: 12px; color: #000000; opacity:26%">settings</text>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <% include ./footer %>
 </div>
 </body>
 <script>
@@ -222,7 +184,7 @@
 
     function getVideos(button) {
         //var xhttp = new XMLHttpRequest();
-        var url = "/contentList?userID=<%UserName%>&contentType=video&source=youtube"
+        var url = "/contentList?userID=<%UserID%>&contentType=video&Source=youtube&deviceID=<%=DeviceID%>"
         //xhttp.open("POST", url, true)
         //xhttp.send()
         window.location = url;
@@ -230,8 +192,39 @@
 
     var videourlnow = ""
     var videonamenow = ""
+    var action="pause" // play/pause
+
+    function skip(buttion, isPrevious) {
+        <%var num = 0;%>
+
+        <%for (i = 0; i < ContentList.length; i++) {%>
+            console.log(videonamenow)
+
+            if ("<%=ContentList[i].ContentName%>" === videonamenow) {
+                if (isPrevious) {
+                    <%num = (i + ContentList.length - 1) % ContentList.length%>
+                } else {
+                    <%num = (i + 1) % ContentList.length%>
+                }
+                videonamenow = "<%=ContentList[num].ContentName%>";
+                videourlnow = "<%=ContentList[num].URL%>";
+                <% break;%>
+            }
+        <%}%>
+
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==video&URL="
+                + videourlnow + "&source=youtube&action=" + action;
+        xhttp.open("POST", url, true)
+        xhttp.send()
+    }
+
     function playVideo(button, bylist) {
-        var action = "play"
+        action = "play"
+        if (videonamenow === "") {
+            videonamenow = "<%=ContentList[0].ContentName%>";
+            videourlnow = "<%=ContentList[0].URL%>";
+        }
 
         if (!bylist) {
             if (document.getElementById("play-button").innerHTML.indexOf("pause") >= 0) {
@@ -259,7 +252,7 @@
         }
 
         var xhttp = new XMLHttpRequest();
-        var url = "/control?userID=<%=UserName%>&deviceID=<%=DeviceID%>&contentType==video&URL="
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==video&URL="
                 + videourlnow + "&source=youtube&action=" + action;
         xhttp.open("POST", url, true)
         xhttp.send()
