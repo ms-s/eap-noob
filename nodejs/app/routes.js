@@ -33,7 +33,7 @@ module.exports = function(app, passport) {
     // HOME PAGE (with login links) ========
     // =====================================
     app.get('/', function(req, res) {
-        res.render('index.ejs'); // load the index.ejs file
+        res.render('login.ejs'); // load the index.ejs file
     });
 
     // =====================================
@@ -139,15 +139,15 @@ module.exports = function(app, passport) {
             }
             serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
                 if (!err) {
-                    notificationRows.forEach(function(row)) {
+                    notificationRows.forEach(function(row) {
                         notificationList.push({
                             NotificationID: row.NotificationID,
                             NotificationType: row.NotificationType,
                             Description: row.Description
                         });
-                    }
-                });  
-            }
+                    });
+                }
+            })
             // change to render
             res.render('display.ejs', {
                 UserID: userID,
