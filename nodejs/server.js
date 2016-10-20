@@ -104,8 +104,9 @@ serverDB.serialize(function() {
 
   serverDB.run('create table if not exists Notification \
     (NotificationID integer primary key autoincrement, \
+    UserID integer, \
     DeviceID integer, \
-    Timestamp text, \
+    Timestamp integer, \
     NotificationType text, \
     Description text);');
 
