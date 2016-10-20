@@ -15,18 +15,18 @@ var PythonShell = require('python-shell');
 var url = require('url');
 var state_array = ['Unregistered','OOB Waiting', 'OOB Received' ,'Reconnect Exchange', 'Registered'];
 var error_info = [ "No error",
-                             "Invalid NAI or peer state",
-                             "Invalid message structure",
-                             "Invalid data",
-                             "Unexpected message type",
-                             "Unexpected peer identifier",
-                             "Invalid ECDH key",
-                             "Unwanted peer",
-                             "State mismatch, user action required",
-                             "No mutually supported protocol version",
-                             "No mutually supported cryptosuite",
-                             "No mutually supported OOB direction",
-                             "MAC verification failure"];
+"Invalid NAI or peer state",
+"Invalid message structure",
+"Invalid data",
+"Unexpected message type",
+"Unexpected peer identifier",
+"Invalid ECDH key",
+"Unwanted peer",
+"State mismatch, user action required",
+"No mutually supported protocol version",
+"No mutually supported cryptosuite",
+"No mutually supported OOB direction",
+"MAC verification failure"];
 module.exports = function(app, passport) {
 
     // =====================================
@@ -43,26 +43,26 @@ module.exports = function(app, passport) {
 
         // render the page and pass in any flash data if it exists
     //console.log(req.session.returnTo);
-        res.render('login.ejs', { message: req.flash('loginMessage')}); 
-    });
+    res.render('login.ejs', { message: req.flash('loginMessage')}); 
+});
 
     
     app.get('/getDevices', isLoggedIn, function(req, res) {
-    
+
         var device_info = req.query.DeviceInfo;
         var queryObject = url.parse(req.url,true).query;
         var len = Object.keys(queryObject).length;
-    
+
         if(len != 1 || device_info == undefined)
         {
-        console.log("Its wrong Query");
-        res.json({"error":"Wrong Query."});
+            console.log("Its wrong Query");
+            res.json({"error":"Wrong Query."});
         }else{
-        var deviceDetails = new Array();
-        var i= 0;
-        var parseJson;
-        var devInfoParam = '%' + device_info + '%';
-        db = new sqlite3.Database(conn_str);
+            var deviceDetails = new Array();
+            var i= 0;
+            var parseJson;
+            var devInfoParam = '%' + device_info + '%';
+            db = new sqlite3.Database(conn_str);
         db.all('SELECT PeerID, PeerInfo FROM peers_connected where peerInfo LIKE ? AND serv_state = ? AND userName IS NULL', devInfoParam, 1, function(err,rows){ //check for error conditions too
             db.close();
             if(!err){
@@ -85,7 +85,7 @@ module.exports = function(app, passport) {
             }
         });
     }
-    });
+});
 
     app.get('/devices', isLoggedIn, function(req, res) {
         userID = req.user.userID;
@@ -120,29 +120,46 @@ module.exports = function(app, passport) {
         var deviceName = 'Error';
         var deviceState = 'N/A';
         var description = 'N/A';
+        var deviceType = '';
         var image = 'N/A';
+        var userID = '';
+        var notificationList = [];
+        var contentList = [];
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.all('select DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, rows) {
+        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, rows) {
             if (!err) {
                 rows.forEach(function(row) {
+                    userID = row.userID;
                     deviceName = row.DeviceName;
                     deviceState = row.DeviceState;
                     description = row.Description;
                     image = row.Image;
+                    deviceType = row.DeviceType;
                 });
             }
+            serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
+                if (!err) {
+                    notificationRows.forEach(function(row)) {
+                        notificationList.push({
+                            NotificationID: row.NotificationID,
+                            NotificationType: row.NotificationType,
+                            Description: row.Description
+                        });
+                    }
+                });  
+            }
             // change to render
-            res.json({
-                "DeviceName": deviceName,
-                "DeviceState": deviceState,
-                "Description": description,
-                "Image": image
+            res.render('display.ejs', {
+                UserID: userID,
+                DeviceName: deviceName,
+                DeviceState: deviceState,
+                Description: description,
+                Image: image,
+                NotificationList: notificationList,
+                ContentList: contentList
             });
             serverDB.close();
         });
-        // Will directly sending a string of json be better?
-
-        // var parts = query.split("&");
     });
 
     app.get('/insertDevice', function(req, res) {
@@ -150,65 +167,78 @@ module.exports = function(app, passport) {
         var peer_id = req.query.PeerId;
         var queryObject = url.parse(req.url,true).query;
         var len = Object.keys(queryObject).length;
-    
+
         if(len != 1 || peer_id == undefined)
         {
-       res.json({"status":"failed"});
-        }else{
-           console.log('req received');
+         res.json({"status":"failed"});
+     }else{
+         console.log('req received');
 
-        db = new sqlite3.Database(conn_str);
-            db.get('SELECT count(*) AS rowCount, PeerID, serv_state, PeerInfo, errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
-                
-                if (err){res.json({"status": "failed"});}
-        else if(row.rowCount != 1) {console.log(row.length);res.json({"status": "refresh"});}
-        else {
+         db = new sqlite3.Database(conn_str);
+         serverDB = new sqlite3.Database(serverDBPath);
+         db.get('SELECT count(*) AS rowCount, PeerID, serv_state, PeerInfo, errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
 
-            var options = {
-                mode: 'text',
-                pythonPath: '/usr/bin/python',
-                pythonOptions: ['-u'],
-                scriptPath: configDB.ooblibPath,
-                args: ['-o', peer_id]
-            };
-            var parseJ;
+            if (err){res.json({"status": "failed"});}
+            else if(row.rowCount != 1) {console.log(row.length);res.json({"status": "refresh"});}
+            else {
+
+                var options = {
+                    mode: 'text',
+                    pythonPath: '/usr/bin/python',
+                    pythonOptions: ['-u'],
+                    scriptPath: configDB.ooblibPath,
+                    args: ['-o', peer_id]
+                };
+                var parseJ;
                 PythonShell.run('oobmessage.py', options, function (err,results) {
-                        if (err){console.log("results : ",results); res.json({"status": "failed"});}
-                else{
-                    parseJ = JSON.parse(results);
-                    var noob = parseJ['noob'];
-                    var hoob = parseJ['hoob'];
-                    var hash = crypto.createHash('sha256');
-                    var hash_str = noob+'AFARMERLIVEDUNDERTHEMOUNTAINANDGREWTURNIPSFORALIVING'
+                    if (err){console.log("results : ",results); res.json({"status": "failed"});}
+                    else{
+                        parseJ = JSON.parse(results);
+                        var noob = parseJ['noob'];
+                        var hoob = parseJ['hoob'];
+                        var hash = crypto.createHash('sha256');
+                        var hash_str = noob+'AFARMERLIVEDUNDERTHEMOUNTAINANDGREWTURNIPSFORALIVING'
                     //console.log(hash_str);
                     hash.update(hash_str);
                     var hint =  base64url.encode(hash.digest());
                     //console.log(hint.slice(0,22));
                     //console.log(hint.slice(0,32));
-                            db.get('INSERT INTO devices (PeerID, serv_state, PeerInfo, Noob, Hoob,Hint,errorCode, username) values(?,?,?,?,?,?,?,?)', peer_id, row.serv_state, row.PeerInfo, noob, hoob, hint.slice(0,32),0, req.user.username, function(err, row) {
-                                db.close();
-                                if (err){console.log(err);res.json({"status": "failed"});}
-                        else {res.json({"status": "success"});}
-                            });
-                }
-                });
-        }
-            });
 
-    }
-    });
+                    serverDB.all('select UserID from User where UserName = ?', req.user.username, function(err, userRows) {
+                        userRows.forEach(function(row) {
+                            serverDB.get('insert into Device (DeviceID, DeviceName, DeviceState, Description, UserID, Image) \
+                            values(?, ?, ?, ?, ?, ?)',
+                            peer_id, 'Device Name', 'Device State', row.PeerInfo, row.UserID, 'Image',
+                            function(err, row) {
+                                serverDB.close();
+                            });
+                        });
+                    });
+
+                    db.get('INSERT INTO devices (PeerID, serv_state, PeerInfo, Noob, Hoob,Hint,errorCode, username) values(?,?,?,?,?,?,?,?)', peer_id, row.serv_state, row.PeerInfo, noob, hoob, hint.slice(0,32),0, req.user.username, function(err, row) {
+                        db.close();
+                        if (err){console.log(err);res.json({"status": "failed"});}
+                        else {res.json({"status": "success"});}
+                    });
+                }
+            });
+            }
+        });
+
+     }
+ });
 
     app.get('/python', function(req, res) {
 
         // render the page and pass in any flash data if it exists
         //console.log(req.session.returnTo)i;
-    var parseJ;
+        var parseJ;
         PythonShell.run('oobmessage.py', options, function (err,results) {
-                if (err) console.log (err);
-                res.send("Its Successful");
+            if (err) console.log (err);
+            res.send("Its Successful");
         //parseJ = JSON.parse(results);
-                console.log('results:', results);
-        });
+        console.log('results:', results);
+    });
     });
 
 
@@ -286,10 +316,10 @@ module.exports = function(app, passport) {
     //                     }else{
     //                         userDetails[i].sTime = '0';
     //                     }   
-                
+
     //                     i++;
     //                 });
-        
+
     //                 res.render('profile.ejs', {
     //                         user : req.user, userInfo : userDetails, deviceInfo : deviceDetails,  url : configDB.url, message: req.flash('profileMessage') // get the user out of session and pass to template
     //                     });
@@ -305,12 +335,16 @@ module.exports = function(app, passport) {
     //         res.render('profile.ejs', {
     //                     user : req.user, userInfo :'', deviceInfo : '', url : configDB.url,  message: req.flash('profileMessage') // get the user out of session and pass to template
     //             });
-            
+
     //     }
     //     //db.close();
     // });
     // //db.close();
     // });
+
+    app.get('/contentList', isLoggedIn, function(req, res) {
+        serverDB = new sqlite3.Database(serverDBPath);
+    });
 
     app.get('/profile', isLoggedIn, function(req, res) {
         serverDB = new sqlite3.Database(serverDBPath);
@@ -415,12 +449,12 @@ module.exports = function(app, passport) {
         failureRedirect : '/login', // redirect back to the signup page if there is an error
         failureFlash : true // allow flash messages   
     }),function (req, res) { 
-    if(req.session.returnTo){       
+        if(req.session.returnTo){       
           res.redirect(req.session.returnTo || '/');  delete req.session.returnTo; 
-    }else{
+      }else{
           res.redirect('/profile');
-    }  
-    });
+      }  
+  });
 
     // process QR-code
     app.get('/QRcode/',isLoggedIn, function (req, res) {
@@ -429,95 +463,95 @@ module.exports = function(app, passport) {
         var hoob = req.query.Hoob;
         var queryObject = url.parse(req.url,true).query;
         var len = Object.keys(queryObject).length;
-    
+
         if(len != 3 || peer_id == undefined || noob == undefined || hoob == undefined)
         {
-       req.flash('profileMessage','Wrong query String! Please try again with proper Query!!' );
-       res.redirect('/profile');
-        }else if(noob.length != 22 || hoob.length != 22){
+         req.flash('profileMessage','Wrong query String! Please try again with proper Query!!' );
+         res.redirect('/profile');
+     }else if(noob.length != 22 || hoob.length != 22){
 
-           console.log("Updating Error!!!" + peer_id);
-           db = new sqlite3.Database(conn_str);
-        
-            db.serialize(function() {
-             var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, errorCode = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
-             stmt.run(1234,"","",3,req.user.username,2,peer_id);
-         stmt.finalize();
-            });
+         console.log("Updating Error!!!" + peer_id);
+         db = new sqlite3.Database(conn_str);
 
-    db.close();
-    req.flash('profileMessage','Invalid Data');
-        res.redirect('/profile');
+         db.serialize(function() {
+           var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, errorCode = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
+           stmt.run(1234,"","",3,req.user.username,2,peer_id);
+           stmt.finalize();
+       });
 
-        }else{
+         db.close();
+         req.flash('profileMessage','Invalid Data');
+         res.redirect('/profile');
 
-           db = new sqlite3.Database(conn_str);
-        
-            db.serialize(function() {
-             var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
-             stmt.run(1234,noob,hoob,req.user.username,2,peer_id);
-         stmt.finalize();
-            });
+     }else{
 
-    db.close();
-    req.flash('profileMessage','Received Successfully');
-        res.redirect('/profile');
-       }
-    });
+         db = new sqlite3.Database(conn_str);
+
+         db.serialize(function() {
+           var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
+           stmt.run(1234,noob,hoob,req.user.username,2,peer_id);
+           stmt.finalize();
+       });
+
+         db.close();
+         req.flash('profileMessage','Received Successfully');
+         res.redirect('/profile');
+     }
+ });
     app.get('/stateUpdate', function(req, res) {
         var peer_id = req.query.PeerId;
         var state = req.query.State;
         var queryObject = url.parse(req.url,true).query;
         var len = Object.keys(queryObject).length;
-    
+
         if(len != 2 || peer_id == undefined || state == undefined)
         {
-           console.log("Its wrong Query");
-       res.json({"error":"Wrong Query."});
-        }else{
-           console.log('req received');
-        db = new sqlite3.Database(conn_str);
-            db.get('SELECT serv_state,errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
+         console.log("Its wrong Query");
+         res.json({"error":"Wrong Query."});
+     }else{
+         console.log('req received');
+         db = new sqlite3.Database(conn_str);
+         db.get('SELECT serv_state,errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
 
-                db.close();
-                if (!row){res.json({"state": "No record found.","state_num":"0"});}
-        else if(row.errorCode) { res.json({"state":error_info[parseInt(row.errorCode)], "state_num":"0"}); console.log(row.errorCode) }
-                else if(parseInt(row.serv_state) == parseInt(state)) {res.json({"state":""});}
-        else {res.json({"state": state_array[parseInt(row.serv_state)], "state_num": row.serv_state});}
-            });
-    }
-    });
+            db.close();
+            if (!row){res.json({"state": "No record found.","state_num":"0"});}
+            else if(row.errorCode) { res.json({"state":error_info[parseInt(row.errorCode)], "state_num":"0"}); console.log(row.errorCode) }
+            else if(parseInt(row.serv_state) == parseInt(state)) {res.json({"state":""});}
+            else {res.json({"state": state_array[parseInt(row.serv_state)], "state_num": row.serv_state});}
+        });
+     }
+ });
 
     app.get('/deleteDevice', function(req, res) {
         //console.log(req);
         var peer_id = req.query.PeerId;
         var queryObject = url.parse(req.url,true).query;
         var len = Object.keys(queryObject).length;
-    
+
         if(len != 1 || peer_id == undefined)
         {
-       res.json({"status":"failed"});
-        }else{
-           console.log('req received');
+         res.json({"status":"failed"});
+     }else{
+         console.log('req received');
 
-        db = new sqlite3.Database(conn_str);
-            db.get('SELECT count(*) AS rowCount FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
+         db = new sqlite3.Database(conn_str);
+         db.get('SELECT count(*) AS rowCount FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
 
-                
-                if (err){res.json({"status": "failed"});}
-        else if(row.rowCount != 1) {res.json({"status": "refresh"});}
-        else {
-                    db.get('DELETE FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
-                        db.close();
-                        if (err){res.json({"status": "failed"});}
-                else {res.json({"status": "success"});}
-                    });
-        }
-            });
 
-       }
-    }
-    );
+            if (err){res.json({"status": "failed"});}
+            else if(row.rowCount != 1) {res.json({"status": "refresh"});}
+            else {
+                db.get('DELETE FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
+                    db.close();
+                    if (err){res.json({"status": "failed"});}
+                    else {res.json({"status": "success"});}
+                });
+            }
+        });
+
+     }
+ }
+ );
 };
 
 
