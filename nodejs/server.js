@@ -122,7 +122,7 @@ serverDB.serialize(function() {
   serverDB.close();
 });
 
-app.get('/control', isLoggedIn, function(req, res) {
+app.get('/control', function(req, res) {
     var query = req._parsedUrl.query;
     var parts = query.split('&');
     var userID;
