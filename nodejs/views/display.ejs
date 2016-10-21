@@ -77,7 +77,7 @@
                                 <%=notification.Description %>
                             </div>
                             <div class="mdl-card__actions mdl-card--border">
-                                <%if (notification.NotificationType === "softwareUpdate") {%>
+                                <%if (notification.NotificationType === "SoftwareUpdate") {%>
                                 <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
                                    onclick="notificationAction(this, '<%=notification.NotificationID%>', 'details', 'SoftwareUpdate')">
                                     Details
