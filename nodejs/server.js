@@ -122,8 +122,41 @@ serverDB.serialize(function() {
   serverDB.close();
 });
 
+app.get('/control', isLoggedIn, function(req, res) {
+    var query = req._parsedUrl.query;
+    var parts = query.split('&');
+    var userID;
+    var deviceID;
+    var contentType;
+    var url;
+    var source;
+    var action;
+    var tmpParts;
 
+    tmpParts = parts[0].split('=');
+    userID = tmpParts[1];
+    tmpParts = parts[1].split('=');
+    deviceID = parseInt(tmpParts[1]);
+    tmpParts = parts[2].split('=');
+    contentType = tmpParts[1];
+    var pivot = parts[3].indexOf("=");
+    url = parts[3].substring(pivot + 1);
+    tmpParts = parts[4].split('=');
+    source = tmpParts[1];
+    tmpParts = parts[5].split('=');
+    action = tmpParts[1];
 
+    var jsonData = {
+        'type': contentType,
+        'action': action,
+        'url': url,
+        'source': source,
+        'software_list': []
+    };
+    
+    connMap[deviceID].send(JSON.stringify(jsonData));
+    res.json('status': 'success');
+});
 
 https.createServer(options, app).listen(8080, function () {
    console.log('Started!');
