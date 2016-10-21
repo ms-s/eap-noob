@@ -391,6 +391,7 @@ module.exports = function(app, passport) {
                     // deviceType = row.DeviceType;
                 });
             }
+
             serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
                 if (!err) {
                     notificationRows.forEach(function(row) {
@@ -425,6 +426,7 @@ module.exports = function(app, passport) {
                         NotificationList: notificationList,
                         ContentList: contentList
                     });
+                    
                     serverDB.close();
                 });
             })
