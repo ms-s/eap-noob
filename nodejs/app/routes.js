@@ -63,29 +63,29 @@ module.exports = function(app, passport) {
             var parseJson;
             var devInfoParam = '%' + device_info + '%';
             db = new sqlite3.Database(conn_str);
-        db.all('SELECT PeerID, PeerInfo FROM peers_connected where peerInfo LIKE ? AND serv_state = ? AND userName IS NULL', devInfoParam, 1, function(err,rows){ //check for error conditions too
-            db.close();
-            if(!err){
-                rows.forEach(function(row) {
-                    deviceDetails[i] = new Object();
-                    deviceDetails[i].peer_id = row.PeerID;
-                    parseJson= JSON.parse(row.PeerInfo);
-                    deviceDetails[i].peer_name = parseJson['PeerName'];
-                    deviceDetails[i].peer_num = parseJson['PeerSNum'];
-                    deviceDetails[i].peer_ssid = parseJson['PeerSSID'];
-                    deviceDetails[i].peer_bssid = parseJson['PeerBSSID'];
+            db.all('SELECT PeerID, PeerInfo FROM peers_connected where peerInfo LIKE ? AND serv_state = ? AND userName IS NULL', devInfoParam, 1, function(err,rows){ //check for error conditions too
+                db.close();
+                if(!err){
+                    rows.forEach(function(row) {
+                        deviceDetails[i] = new Object();
+                        deviceDetails[i].peer_id = row.PeerID;
+                        parseJson= JSON.parse(row.PeerInfo);
+                        deviceDetails[i].peer_name = parseJson['PeerName'];
+                        deviceDetails[i].peer_num = parseJson['PeerSNum'];
+                        deviceDetails[i].peer_ssid = parseJson['PeerSSID'];
+                        deviceDetails[i].peer_bssid = parseJson['PeerBSSID'];
+                        
+                        i++;
+                    });
+                    console.log(JSON.stringify(deviceDetails)); 
+                    res.send(JSON.stringify(deviceDetails));
+                }else{
+                    res.send(JSON.stringify(deviceDetails));
                     
-                    i++;
-                });
-                console.log(JSON.stringify(deviceDetails)); 
-                res.send(JSON.stringify(deviceDetails));
-            }else{
-                res.send(JSON.stringify(deviceDetails));
-                
-            }
-        });
-    }
-});
+                }
+            });
+        }
+    });
 
     app.get('/devices', isLoggedIn, function(req, res) {
         // userID = req.user.userID;
@@ -97,38 +97,33 @@ module.exports = function(app, passport) {
         serverDB = new sqlite3.Database(serverDBPath);
         var deviceList = [];
 
-        serverDB.all('select UserName from User where UserID = ?', userID, function(err, rows) {
+        serverDB.all('select UserName from User where UserID = ?', userID, function(err, userRows) {
             if (!err) {
-                rows.forEach(function(row) {
+                userRows.forEach(function(row) {
                     userName = row.UserName;
                 });
             }
 
-            serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', function(err, rows) {
-                if (err) {
-                    res.render('devices.ejs', {
-                        UserID: userID,
-                        UserName: userName,
-                        Devices: deviceList
+            serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', function(err, deviceRows) {
+                if (!err) {
+                    deviceRows.forEach(function(row) {
+                        deviceList.push({
+                            DeviceID: row.DeviceID, 
+                            DeviceName: row.DeviceName,
+                            DeviceState: row.DeviceState,
+                            Description: row.Description,
+                            Image: row.Image
+                        });
                     });
-                    serverDB.close();
-                    return;
                 }
-                rows.forEach(function(row) {
-                    deviceList.push({
-                        DeviceID: row.DeviceID, 
-                        DeviceName: row.DeviceName,
-                        DeviceState: row.DeviceState,
-                        Description: row.Description,
-                        Image: row.Image});
-                });
+
                 res.render('devices.ejs', {
                     UserID: userID,
                     UserName: userName,
                     Devices: deviceList
                 });
+
                 serverDB.close();
-                return;
             });
         });
     });
