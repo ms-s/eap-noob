@@ -139,13 +139,12 @@ module.exports = function(app, passport) {
         var deviceName = 'Error';
         var deviceState = 'N/A';
         var description = 'N/A';
-        var deviceType = '';
         var image = 'N/A';
         var userID = '';
         var notificationList = [];
         var contentList = [];
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, rows) {
+        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, rows) {
             if (!err) {
                 rows.forEach(function(row) {
                     userID = row.userID;
@@ -153,7 +152,6 @@ module.exports = function(app, passport) {
                     deviceState = row.DeviceState;
                     description = row.Description;
                     image = row.Image;
-                    deviceType = row.DeviceType;
                 });
             }
             serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
@@ -379,19 +377,18 @@ module.exports = function(app, passport) {
         var deviceState;
         var description;
         var image;
-        var deviceType;
         var notificationList = [];
         var contentList = [];
 
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, rows) {
+        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, rows) {
             if (!err) {
                 rows.forEach(function(row) {
                     deviceName = row.DeviceName;
                     deviceState = row.DeviceState;
                     description = row.Description;
                     image = row.Image;
-                    deviceType = row.DeviceType;
+                    // deviceType = row.DeviceType;
                 });
             }
             serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
@@ -523,7 +520,7 @@ module.exports = function(app, passport) {
         var type;
         var userID;
         tmpParts = parts[0].split('=');
-        notificationID = tmpParts[1];
+        notificationID = parseInt(tmpParts[1]);
 
         tmpParts = parts[1].split('=');
         action = tmpParts[1];
@@ -536,7 +533,7 @@ module.exports = function(app, passport) {
         var deviceState;
         var description;
         var image;
-        var deviceType;
+        // var deviceType;
         var notificationList = [];
         var contentList = [];
         var deviceID;
@@ -547,76 +544,79 @@ module.exports = function(app, passport) {
         console.log(type);
 
         serverDB.all('select DeviceID from Notification where NotificationID = ?', notificationID, function(err, rows) {
-            rows.forEach(function(row) {
-                deviceID = row.DeviceID;
+            if (!err) {
+                rows.forEach(function(row) {
+                    deviceID = row.DeviceID;
+                    console.log('deviceID');
+                    console.log(deviceID);
+                });
+            }
+            serverDB.all('select UserID, DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, deviceRows) {
+                if (!err) {
+                    deviceRows.forEach(function(row) {
+                        userID = row.UserID;
+                        deviceName = row.DeviceName;
+                        deviceState = row.DeviceState;
+                        description = row.Description;
+                        image = row.Image;
+                    });
+                }
+
+                serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
+                    if (!err) {
+                        notificationRows.forEach(function(row) {
+                            notificationList.push({
+                                NotificationID: row.NotificationID,
+                                NotificationType: row.NotificationType,
+                                Description: row.Description
+                            });
+                        });
+                    }
+
+                    if (type == 'SoftwareUpdate') {
+                        if (action == 'cancel') {
+                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            });
+                            res.json({'status': 'OK'});
+                        } else if (action == 'details') {
+                            res.render('display.ejs', {
+                                DeviceID: deviceID,
+                                UserID: userID,
+                                DeviceName: deviceName,
+                                DeviceState: deviceState,
+                                Description: description,
+                                Image: image,
+                                NotificationList: notificationList,
+                                ContentList: contentList
+                            });
+                        } else if (action == 'agree') {
+                            // transmit file to client
+                        }
+                    } else {
+                        // VideoListUpdate / AudioListUpdate
+                        if (action == 'cancel') {
+                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            });
+                            res.json({'status': 'OK'});
+                        } else if (action == 'details') {
+                            res.render('display.ejs', {
+                                DeviceID: deviceID,
+                                UserID: userID,
+                                DeviceName: deviceName,
+                                DeviceState: deviceState,
+                                Description: description,
+                                Image: image,
+                                NotificationList: notificationList,
+                                ContentList: contentList
+                            });
+                        }
+                    }
+
+                    serverDB.close();
+                });
             });
         });
 
-        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, rows) {
-            if (!err) {
-                rows.forEach(function(row) {
-                    userID = row.UserID;
-                    deviceName = row.DeviceName;
-                    deviceState = row.DeviceState;
-                    description = row.Description;
-                    image = row.Image;
-                    deviceType = row.DeviceType;
-                });
-            }
-        });
-
-        serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
-            if (!err) {
-                notificationRows.forEach(function(row) {
-                    notificationList.push({
-                        NotificationID: row.NotificationID,
-                        NotificationType: row.NotificationType,
-                        Description: row.Description
-                    });
-                });
-            }
-        });
-
-        if (type == 'SoftwareUpdate') {
-            if (action == 'cancel') {
-                serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                });
-                res.json({'status': 'OK'});
-            } else if (action == 'details') {
-                res.render('display.ejs', {
-                    DeviceID: deviceID,
-                    UserID: userID,
-                    DeviceName: deviceName,
-                    DeviceState: deviceState,
-                    Description: description,
-                    Image: image,
-                    NotificationList: notificationList,
-                    ContentList: contentList
-                });
-            } else if (action == 'agree') {
-                // transmit file to client
-            }
-        } else {
-            // VideoListUpdate / AudioListUpdate
-            if (action == 'cancel') {
-                serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                });
-                res.json({'status': 'OK'});
-            } else if (action == 'details') {
-                res.render('display.ejs', {
-                    DeviceID: deviceID,
-                    UserID: userID,
-                    DeviceName: deviceName,
-                    DeviceState: deviceState,
-                    Description: description,
-                    Image: image,
-                    NotificationList: notificationList,
-                    ContentList: contentList
-                });
-            }
-        }
-
-        serverDB.close();
     });
 
     app.get('/checkUpdate', isLoggedIn, function(req, res) {
