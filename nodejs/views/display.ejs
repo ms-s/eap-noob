@@ -192,7 +192,8 @@
 
     function getVideos(button) {
         //var xhttp = new XMLHttpRequest();
-        var url = "/contentList?userID=<%UserID%>&contentType=video&Source=youtube&deviceID=<%=DeviceID%>"
+        console.log(<%=UserID%>)
+        var url = "/contentList?userID=<%=UserID%>&contentType=video&Source=YouTube&deviceID=<%=DeviceID%>"
         //xhttp.open("POST", url, true)
         //xhttp.send()
         window.location = url;

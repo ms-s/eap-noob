@@ -402,7 +402,7 @@ module.exports = function(app, passport) {
                     });
                 }
 
-                serverDB.all('select ContentID, ContentName, URL where Source = ?', source,
+                serverDB.all('select ContentID, ContentName, ContentURL from ContentList where Source = ?', source,
                 function(err, contentRows) {
                     if (!err) {
                         contentList.push(
@@ -412,6 +412,8 @@ module.exports = function(app, passport) {
                             URL: contentRows.URL
                         });
                     }
+
+                    console.log("ContentList: " + contentList);
 
                     res.render('display.ejs', {
                         DeviceID: deviceID,
@@ -580,6 +582,8 @@ module.exports = function(app, passport) {
                             });
                             res.json({'status': 'OK'});
                         } else if (action == 'details') {
+                            console.log(userID);
+
                             res.render('display.ejs', {
                                 DeviceID: deviceID,
                                 UserID: userID,
@@ -600,6 +604,8 @@ module.exports = function(app, passport) {
                             });
                             res.json({'status': 'OK'});
                         } else if (action == 'details') {
+                            console.log(userID);
+
                             res.render('display.ejs', {
                                 DeviceID: deviceID,
                                 UserID: userID,
