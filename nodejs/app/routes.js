@@ -402,7 +402,6 @@ module.exports = function(app, passport) {
                         });
                     }
                 });
-            // change to render
             res.render('display.ejs', {
                 DeviceID: deviceID,
                 UserID: userID,
@@ -453,7 +452,6 @@ module.exports = function(app, passport) {
                     return;
                 }
                 notificationRows.forEach(function(row) {
-                    // notificationList.push([row.NotificationID, row.DeviceID, row.NotificationType, row.Description]);
                     notificationList.push({
                         NotificationID: row.NotificationID,
                         DeviceID: row.DeviceID,
@@ -498,6 +496,30 @@ module.exports = function(app, passport) {
                     return;
                 });
             });
+        });
+    });
+
+    app.get('/checkUpdate', isLoggedIn, function(req, res) {
+        var query = req._parsedUrl.query;
+        var parts = query.split('=');
+        var userID = parts[1];
+        var notificationList = [];
+        serverDB = new sqlite3.Database(serverDBPath);
+        serverDB.all('select NotificationID, DeviceID, NotificationType, Description from Notification where UserID = ?', userID, function(err, rows) {
+            serverDB.close();
+            if (!err) {
+                rows.forEach(function(row) {
+                    notificationList.push({
+                        NotificationID: row.NotificationID,
+                        DeviceID: row.DeviceID,
+                        NotificationType: row.NotificationType,
+                        Description: row.description
+                    });
+                });
+            }
+            res.json({
+                NotificationList: notificationList
+            })
         });
     });
 
