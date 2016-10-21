@@ -401,8 +401,8 @@ module.exports = function(app, passport) {
                         });
                     });
                 }
-            })
-            serverDB.all('select ContentID, ContentName, URL where Source = ?', source,
+
+                serverDB.all('select ContentID, ContentName, URL where Source = ?', source,
                 function(err, contentRows) {
                     if (!err) {
                         contentList.push(
@@ -412,20 +412,21 @@ module.exports = function(app, passport) {
                             URL: contentRows.URL
                         });
                     }
-                });
-            res.render('display.ejs', {
-                DeviceID: deviceID,
-                UserID: userID,
-                DeviceName: deviceName,
-                DeviceState: deviceState,
-                Description: description,
-                Image: image,
-                NotificationList: notificationList,
-                ContentList: contentList
-            });
-            serverDB.close();
-        });
 
+                    res.render('display.ejs', {
+                        DeviceID: deviceID,
+                        UserID: userID,
+                        DeviceName: deviceName,
+                        DeviceState: deviceState,
+                        Description: description,
+                        Image: image,
+                        NotificationList: notificationList,
+                        ContentList: contentList
+                    });
+                    serverDB.close();
+                });
+            })
+        });
     });
 
     app.get('/profile', isLoggedIn, function(req, res) {
