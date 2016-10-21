@@ -122,6 +122,14 @@ serverDB.serialize(function() {
   serverDB.close();
 });
 
+function base64_encode(file) {
+    // read binary data
+    var bitmap = fs.readFileSync(file);
+    // convert binary data to base64 encoded string
+    return new Buffer(bitmap).toString('base64');
+}
+
+
 app.get('/control', function(req, res) {
     var query = req._parsedUrl.query;
     var parts = query.split('&');
@@ -146,8 +154,10 @@ app.get('/control', function(req, res) {
     tmpParts = parts[5].split('=');
     action = tmpParts[1];
 
-    var softwareName;
+    var softwareName = 'Text File';
     var softwareList = [];
+
+    var content = base64_encode('file.txt');
 
     var jsonData = {
         'type': contentType,
