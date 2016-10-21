@@ -88,10 +88,11 @@ module.exports = function(app, passport) {
     });
 
     app.get('/devices', isLoggedIn, function(req, res) {
+        console.log('Start /devices');
         // userID = req.user.userID;
         var query = req._parsedUrl.query;
         var parts = query.split('=');
-        var userID = parts[1];
+        var userID = parseInt(parts[1]);
         var userName;
 
         serverDB = new sqlite3.Database(serverDBPath);
@@ -103,8 +104,9 @@ module.exports = function(app, passport) {
                     userName = row.UserName;
                 });
             }
-
-            serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', function(err, deviceRows) {
+            console.log(err);
+            console.log(userName);
+            serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', userID, function(err, deviceRows) {
                 if (!err) {
                     deviceRows.forEach(function(row) {
                         deviceList.push({
@@ -117,6 +119,10 @@ module.exports = function(app, passport) {
                     });
                 }
 
+                console.log(err);
+                console.log(userID);
+                console.log(userName);
+                console.log(deviceList);
                 res.render('devices.ejs', {
                     UserID: userID,
                     UserName: userName,
