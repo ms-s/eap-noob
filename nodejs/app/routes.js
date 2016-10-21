@@ -131,7 +131,6 @@ module.exports = function(app, passport) {
         });
     });
 
-    // Don't know if "isLoggedIn" works here
     app.get('/device', isLoggedIn, function(req, res){
         var query = req._parsedUrl.query;
         var parts = query.split("=");
@@ -154,6 +153,7 @@ module.exports = function(app, passport) {
                     image = row.Image;
                 });
             }
+
             serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
                 if (!err) {
                     notificationRows.forEach(function(row) {
@@ -164,19 +164,19 @@ module.exports = function(app, passport) {
                         });
                     });
                 }
+
+                res.render('display.ejs', {
+                    DeviceID: deviceID,
+                    UserID: userID,
+                    DeviceName: deviceName,
+                    DeviceState: deviceState,
+                    Description: description,
+                    Image: image,
+                    NotificationList: notificationList,
+                    ContentList: contentList
+                });
+                serverDB.close();
             })
-            // change to render
-            res.render('display.ejs', {
-                DeviceID: deviceID,
-                UserID: userID,
-                DeviceName: deviceName,
-                DeviceState: deviceState,
-                Description: description,
-                Image: image,
-                NotificationList: notificationList,
-                ContentList: contentList
-            });
-            serverDB.close();
         });
     });
 
