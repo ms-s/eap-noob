@@ -117,6 +117,7 @@
             <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
                 for="demo-menu-lower-right">
                 <li class="mdl-menu__item" onclick="gotoAddDevice()">Add Devices</li>
+                <li class="mdl-menu__item" onclick="checkSoftwareUpdate()">Check Updates</li>
                 <li class="mdl-menu__item" onclick="gotoLogout()">Log Out</li>
             </ul>
         </div>
@@ -198,10 +199,81 @@
 
     </main>
 
-    <% include ./footer %>
+    <% include ./footer-home.ejs %>
 </div>
 
 <script>
+    var checkUpdate = setInterval(checkUpdate, 60000);
+
+    function checkUpdate() {
+        var xhttp = new XMLHttpRequest();
+        var url = "/checkUpdate?userID=<%=UserID%>"
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+                console.log(this.responseText);
+                var notificationList = JSON.parse(this.responseText);
+                console.log(notificationList);
+
+                if (notificationList.NotificationList.length > 0) {
+                    var txt = ""
+                    notificationList.NotificationList.forEach(function(notification) {
+                        txt += "<div class=\"mdl-cell mdl-cell--4-col\" id=\"" + notification.NotificationID + "\">";
+                        txt += "<div class=\"mdl-card mdl-shadow--2dp\" style=\"width:100%;\">";
+                        txt += "<div class=\"mdl-card__title\">";
+                        txt += "<h2 class=\"mdl-card__title-text\">";
+
+                        if (notification.NotificationType === "SoftwareUpdate") {
+                            txt += "Software Update";
+                        } else if (notification.NotificationType === "VideoListUpdate") {
+                            txt += "New Vedio for You";
+                        } else {
+                            txt += "New Audio for You";
+                        }
+
+                        txt += "</h2></div>";
+                        txt += "<div class=\"mdl-card__supporting-text\">";
+                        txt += notification.Description;
+                        txt += "</div>";
+                        txt += "<div class=\"mdl-card__actions mdl-card--border\">";
+
+                        if (notification.NotificationType === "SoftwareUpdate") {
+                            txt += "<a class=\"mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect\"" +
+                                    "onclick=\"notificationAction(this, '" + notification.NotificationID +
+                                    "', 'details', 'SoftwareUpdate')\">";
+                            txt += "Details </a>";
+                            txt += "<a class=\"mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect\"" +
+                                    "onclick=\"notificationAction(this, '" + notification.NotificationID +
+                                    "', 'agree', 'SoftwareUpdate')\">";
+                            txt += "Agree </a>";
+                            txt += "<a class=\"mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect\"" +
+                                    "onclick=\"notificationAction(this, '" + notification.NotificationID +
+                                    "', 'cancel','SoftwareUpdate')\">";
+                            txt += "Cancel</a>"
+
+                        } else {
+                            txt += "<a class=\"mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect\"" +
+                                    "onclick=\"notificationAction(this, '" + notification.NotificationID +
+                                    "', 'details','" + notification.NotificationType + "')\">";
+                            txt += "Details </a>";
+                            txt += "<a class=\"mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect\"" +
+                                    "onclick=\"notificationAction(this, '" + notification.NotificationID +
+                                    "', 'cancel','" + notification.NotificationType + "')\">";
+                            txt += "Cancel</a>";
+                        }
+
+                        txt += "</div></div></div>";
+
+                        document.getElementById("notifications").innerHTML = txt;
+                    })
+                }
+            }
+        };
+
+        xhttp.open("GET", url, true)
+        xhttp.send()
+    }
+
     function notificationAction(button, notificationID, action, type) {
 
         if (action === "cancel") {
@@ -216,11 +288,7 @@
     }
 
     function gotoDevice(deviceID) {
-        // var xhttp = new XMLHttpRequest();
         var url = "/device?deviceID=" + deviceID
-        // xhttp.open("POST", url, true)
-        // xhttp.send()
-
         window.location = url
     }
 
@@ -229,7 +297,7 @@
     }
 
     function gotoDevices() {
-        window.location = "/devices";
+        window.location = "/devices?userID=<%=UserID%>";
     }
 
     function gotoAddDevice() {

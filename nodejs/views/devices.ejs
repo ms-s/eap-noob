@@ -58,15 +58,44 @@
         </ul>
     </main>
 
-    <% include ./footer %>
+    <div id="demo-toast-example" class="mdl-js-snackbar mdl-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button"></button>
+    </div>
+
+    <% include ./footer-devices.ejs %>
 </div>
 </body>
 <script>
-    function gotodevices() {
-        window.location = "/devices";
+
+    var checkUpdate = setInterval(checkUpdate, 60000);
+
+    function checkUpdate() {
+        var xhttp = new XMLHttpRequest();
+        var url = "/checkUpdate?userID=<%= UserID %>"
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                console.log(this.responseText);
+                var notificationList = JSON.parse(this.responseText);
+                console.log(notificationList);
+
+                if (notificationList.NotificationList.length > 0) {
+                    var snackbarContainer = document.querySelector('#demo-toast-example');
+                    var data = {message: 'NEW UPDATE'};
+                    snackbarContainer.MaterialSnackbar.showSnackbar(data);
+                }
+            }
+        };
+
+        xhttp.open("GET", url, true)
+        xhttp.send()
     }
 
-    function gotohome() {
+    function gotoDevices() {
+        window.location = "/devices?userID=<%=UserID%>";
+    }
+
+    function gotoHome() {
         window.location = "/profile";
     }
 
@@ -80,10 +109,10 @@
 
     function gotoDevice(deviceID) {
         //var xhttp = new XMLHttpRequest();
-        var url = "/device?deviceID=" + deviceID
+        var url = "/device?deviceID=" + deviceID;
         //xhttp.open("POST", url, true)
         //xhttp.send()
-        window.location = url
+        window.location = url;
     }
 
 </script>
