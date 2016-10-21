@@ -406,15 +406,18 @@ module.exports = function(app, passport) {
                 serverDB.all('select ContentID, ContentName, ContentURL from ContentList where Source = ?', source,
                 function(err, contentRows) {
                     if (!err) {
-                        contentList.push(
-                        {
-                            ContentID: contentRows.ContentID,
-                            ContentName: contentRows.ContentName,
-                            URL: contentRows.URL
+                        contentRows.forEach(function(contentRow){
+                            contentList.push(
+                            {
+                                ContentID: contentRow.ContentID,
+                                ContentName: contentRow.ContentName,
+                                URL: contentRow.ContentURL
+                            });
                         });
-                    }
 
+                    }
                     console.log("ContentList: " + contentList);
+                    console.log("ContentList.ContentName: " + contentList[0].ContentName);
 
                     res.render('display.ejs', {
                         DeviceID: deviceID,
