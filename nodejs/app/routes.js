@@ -659,6 +659,14 @@ module.exports = function(app, passport) {
         source = tmpParts[1];
         tmpParts = parts[5].split('=');
         action = tmpParts[1];
+
+        var jsonData = {
+            'type': contentType,
+            'action': action,
+            'url': url,
+            'source': source,
+            'software_list': []
+        };
     });
 
     // =====================================
