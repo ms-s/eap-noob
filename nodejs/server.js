@@ -56,8 +56,8 @@ var server = ws.createServer(property, function (conn) {
     conn.on("close", function (code, reason) {
         console.log("Connection closed")
     });
-    connMap[userID] = conn;
-    // connMap["JANE"] = conn;
+    // connMap[userID] = conn;
+    connMap['Lehao'] = conn;
     console.log(connMap);
 }).listen(9000);
 
@@ -169,7 +169,8 @@ app.get('/control', function(req, res) {
         'software_name': softwareName
     };
     
-    connMap[deviceID].send(JSON.stringify(jsonData));
+    // connMap[deviceID].send(JSON.stringify(jsonData));
+    connMap['Lehao'].send(JSON.stringify(jsonData));
     res.json({'status': 'success'});
 });
 
