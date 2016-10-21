@@ -243,10 +243,12 @@
 
     function playVideo(button, bylist) {
         action = "play"
-        if (videonamenow === "") {
-            videonamenow = "<%=ContentList[0].ContentName%>";
-            videourlnow = "<%=ContentList[0].URL%>";
-        }
+        <%if (ContentList.length > 0) {%>
+            if (videonamenow === "") {
+                videonamenow = "<%=ContentList[0].ContentName%>";
+                videourlnow = "<%=ContentList[0].URL%>";
+            }
+        <%}%>
 
         if (!bylist) {
             if (document.getElementById("play-button").innerHTML.indexOf("pause") >= 0) {
