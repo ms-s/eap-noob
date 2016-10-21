@@ -499,6 +499,105 @@ module.exports = function(app, passport) {
         });
     });
 
+    app.post('/profile', isLoggedIn, function(req, res) {
+        serverDB = new sqlite3.Database(serverDBPath);
+        var query = req._parsedUrl.query;
+        var parts = query.split('&');
+        var tmpParts;
+        var notificationID;
+        var action;
+        var type;
+        tmpParts = parts[0].split('=');
+        notificationID = tmpParts[1];
+
+        tmpParts = parts[1].split('=');
+        action = tmpParts[1];
+
+        tmpParts = parts[2].split('=');
+        type = tmpParts[1];
+
+
+        var deviceName;
+        var deviceState;
+        var description;
+        var image;
+        var deviceType;
+        var notificationList = [];
+        var contentList = [];
+        var deviceID;
+
+        serverDB.all('select DeviceID from Notification where NotificationID = ?', notificationID, function(err, rows) {
+            rows.forEach(function(row) {
+                deviceID = row.DeviceID;
+            });
+        });
+
+        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, rows) {
+            if (!err) {
+                rows.forEach(function(row) {
+                    deviceName = row.DeviceName;
+                    deviceState = row.DeviceState;
+                    description = row.Description;
+                    image = row.Image;
+                    deviceType = row.DeviceType;
+                });
+            }
+        });
+
+        serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
+            if (!err) {
+                notificationRows.forEach(function(row) {
+                    notificationList.push({
+                        NotificationID: row.NotificationID,
+                        NotificationType: row.NotificationType,
+                        Description: row.Description
+                    });
+                });
+            }
+        });
+
+        if (type == 'SoftwareUpdate') {
+            if (action == 'cancel') {
+                serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                });
+                res.json({'status': 'OK'});
+            } else if (action == 'detail') {
+                res.render('display.ejs', {
+                    DeviceID: deviceID,
+                    UserID: userID,
+                    DeviceName: deviceName,
+                    DeviceState: deviceState,
+                    Description: description,
+                    Image: image,
+                    NotificationList: notificationList,
+                    ContentList: contentList
+                });
+            } else if (action == 'agree') {
+                // transmit file to client
+            }
+        } else {
+            // VideoListUpdate / AudioListUpdate
+            if (action == 'cancel') {
+                serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                });
+                res.json({'status': 'OK'});
+            } else if (action == 'detail') {
+                res.render('display.ejs', {
+                    DeviceID: deviceID,
+                    UserID: userID,
+                    DeviceName: deviceName,
+                    DeviceState: deviceState,
+                    Description: description,
+                    Image: image,
+                    NotificationList: notificationList,
+                    ContentList: contentList
+                });
+            }
+        }
+
+        serverDB.close();
+    });
+
     app.get('/checkUpdate', isLoggedIn, function(req, res) {
         var query = req._parsedUrl.query;
         var parts = query.split('=');
