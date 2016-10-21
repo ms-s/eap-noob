@@ -157,10 +157,18 @@
         </div>
     </main>
 
-    <% include ./footer %>
+    <% include ./footer-devices.ejs %>
 </div>
 </body>
 <script>
+    function gotoDevices() {
+        window.location = "/devices?userID=<%=UserID%>";
+    }
+
+    function gotoHome() {
+        window.location = "/profile";
+    }
+
     function notificationAction(button, notificationID, action, type) {
 
         if (action === "cancel") {
@@ -190,27 +198,36 @@
         window.location = url;
     }
 
-    var videourlnow = ""
-    var videonamenow = ""
+    var videourlnow = "<%=ContentList[0].ContentName%>"
+    var videonamenow = "<%=ContentList[0].URL%>"
     var action="pause" // play/pause
 
     function skip(buttion, isPrevious) {
-        <%var num = 0;%>
+        <%var num = 0%>
+        var videoname = "<%=ContentList[0].ContentName%>"
+        var videourl = "<%=ContentList[0].URL%>"
 
         <%for (i = 0; i < ContentList.length; i++) {%>
-            console.log(videonamenow)
 
             if ("<%=ContentList[i].ContentName%>" === videonamenow) {
+                console.log(<%=i%>)
+
                 if (isPrevious) {
                     <%num = (i + ContentList.length - 1) % ContentList.length%>
+                    videoname = "<%=ContentList[num].ContentName%>";
+                    videourl = "<%=ContentList[num].URL%>";
                 } else {
                     <%num = (i + 1) % ContentList.length%>
+                    videoname = "<%=ContentList[num].ContentName%>";
+                    videourl = "<%=ContentList[num].URL%>";
                 }
-                videonamenow = "<%=ContentList[num].ContentName%>";
-                videourlnow = "<%=ContentList[num].URL%>";
-                <% break;%>
             }
         <%}%>
+
+        videonamenow = videoname;
+        videourlnow = videourl;
+
+        console.log("video now = " + videonamenow)
 
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==video&URL="
