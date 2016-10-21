@@ -169,6 +169,9 @@ app.get('/control', function(req, res) {
         'software_name': softwareName
     };
     
+    console.log('Ready to send control json');
+    console.log(jsonData);
+
     // connMap[deviceID].send(JSON.stringify(jsonData));
     connMap['Lehao'].send(JSON.stringify(jsonData));
     res.json({'status': 'success'});
