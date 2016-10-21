@@ -146,12 +146,17 @@ app.get('/control', function(req, res) {
     tmpParts = parts[5].split('=');
     action = tmpParts[1];
 
+    var softwareName;
+    var softwareList = [];
+
     var jsonData = {
         'type': contentType,
         'action': action,
         'url': url,
         'source': source,
-        'software_list': []
+        'software_list': softwareList,
+        'content': content,
+        'software_name': softwareName
     };
     
     connMap[deviceID].send(JSON.stringify(jsonData));
