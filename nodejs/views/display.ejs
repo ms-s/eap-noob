@@ -198,14 +198,19 @@
         window.location = url;
     }
 
-    var videourlnow = "<%=ContentList[0].ContentName%>"
-    var videonamenow = "<%=ContentList[0].URL%>"
+    var videourlnow = ""
+    var videonamenow = ""
     var action="pause" // play/pause
 
     function skip(buttion, isPrevious) {
         <%var num = 0%>
-        var videoname = "<%=ContentList[0].ContentName%>"
-        var videourl = "<%=ContentList[0].URL%>"
+        var videoname = "";
+        var videourl = "";
+
+        <%if (ContentList.length > 0) {%>
+            videoname = "<%=ContentList[0].ContentName%>"
+            videourl = "<%=ContentList[0].URL%>"
+        <%}%>
 
         <%for (i = 0; i < ContentList.length; i++) {%>
 

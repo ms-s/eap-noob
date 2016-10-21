@@ -283,6 +283,8 @@
 
         var xhttp = new XMLHttpRequest();
         var url = "/notification?notification=" + notificationID + "&Action=" + action + "&Type=" + type
+        console.log("Send URL: " + url)
+
         xhttp.open("GET", url, true)
         xhttp.send()
     }

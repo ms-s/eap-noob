@@ -513,7 +513,7 @@ module.exports = function(app, passport) {
         });
     });
 
-    app.get('/notification, isLoggedIn, function(req, res) {
+    app.get('/notification', isLoggedIn, function(req, res) {
         serverDB = new sqlite3.Database(serverDBPath);
         var query = req._parsedUrl.query;
         var parts = query.split('&');
@@ -521,6 +521,7 @@ module.exports = function(app, passport) {
         var notificationID;
         var action;
         var type;
+        var userID;
         tmpParts = parts[0].split('=');
         notificationID = tmpParts[1];
 
@@ -540,6 +541,11 @@ module.exports = function(app, passport) {
         var contentList = [];
         var deviceID;
 
+        console.log('notification');
+        console.log(notificationID);
+        console.log(action);
+        console.log(type);
+
         serverDB.all('select DeviceID from Notification where NotificationID = ?', notificationID, function(err, rows) {
             rows.forEach(function(row) {
                 deviceID = row.DeviceID;
@@ -549,6 +555,7 @@ module.exports = function(app, passport) {
         serverDB.all('select UserID, DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, rows) {
             if (!err) {
                 rows.forEach(function(row) {
+                    userID = row.UserID;
                     deviceName = row.DeviceName;
                     deviceState = row.DeviceState;
                     description = row.Description;
@@ -575,7 +582,7 @@ module.exports = function(app, passport) {
                 serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
                 });
                 res.json({'status': 'OK'});
-            } else if (action == 'detail') {
+            } else if (action == 'details') {
                 res.render('display.ejs', {
                     DeviceID: deviceID,
                     UserID: userID,
@@ -595,7 +602,7 @@ module.exports = function(app, passport) {
                 serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
                 });
                 res.json({'status': 'OK'});
-            } else if (action == 'detail') {
+            } else if (action == 'details') {
                 res.render('display.ejs', {
                     DeviceID: deviceID,
                     UserID: userID,
