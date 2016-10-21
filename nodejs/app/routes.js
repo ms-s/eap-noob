@@ -98,13 +98,30 @@ module.exports = function(app, passport) {
         var deviceList = [];
 
         serverDB.all('select UserName from User where UserID = ?', userID, function(err, rows) {
-            rows.forEach(function(row) {
-                userName = row.UserName;
-            });
-        });
+            if (!err) {
+                rows.forEach(function(row) {
+                    userName = row.UserName;
+                });
+            }
 
-        serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', function(err, rows) {
-            if (err) {
+            serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', function(err, rows) {
+                if (err) {
+                    res.render('devices.ejs', {
+                        UserID: userID,
+                        UserName: userName,
+                        Devices: deviceList
+                    });
+                    serverDB.close();
+                    return;
+                }
+                rows.forEach(function(row) {
+                    deviceList.push({
+                        DeviceID: row.DeviceID, 
+                        DeviceName: row.DeviceName,
+                        DeviceState: row.DeviceState,
+                        Description: row.Description,
+                        Image: row.Image});
+                });
                 res.render('devices.ejs', {
                     UserID: userID,
                     UserName: userName,
@@ -112,22 +129,7 @@ module.exports = function(app, passport) {
                 });
                 serverDB.close();
                 return;
-            }
-            rows.forEach(function(row) {
-                deviceList.push({
-                    DeviceID: row.DeviceID, 
-                    DeviceName: row.DeviceName,
-                    DeviceState: row.DeviceState,
-                    Description: row.Description,
-                    Image: row.Image});
             });
-            res.render('devices.ejs', {
-                UserID: userID,
-                UserName: userName,
-                Devices: deviceList
-            });
-            serverDB.close();
-            return;
         });
     });
 

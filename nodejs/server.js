@@ -130,7 +130,7 @@ function base64_encode(file) {
 }
 
 
-app.get('/control', function(req, res) {
+app.post('/control', function(req, res) {
     var query = req._parsedUrl.query;
     var parts = query.split('&');
     var userID;
