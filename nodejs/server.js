@@ -155,7 +155,7 @@ app.get('/control', isLoggedIn, function(req, res) {
     };
     
     connMap[deviceID].send(JSON.stringify(jsonData));
-    res.json('status': 'success');
+    res.json({'status': 'success'});
 });
 
 https.createServer(options, app).listen(8080, function () {
