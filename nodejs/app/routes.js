@@ -2,6 +2,13 @@
 var common = require('./common');
 var connMap = common.connMap;
 
+function base64_encode(file) {
+    // read binary data
+    var bitmap = fs.readFileSync(file);
+    // convert binary data to base64 encoded string
+    return new Buffer(bitmap).toString('base64');
+}
+
 var base64url = require('base64url');
 var crypto = require('crypto');
 var sqlite3 = require('sqlite3').verbose();
@@ -533,6 +540,7 @@ module.exports = function(app, passport) {
         var action;
         var type;
         var userID;
+        var softwareUpdateURL;
         tmpParts = parts[0].split('=');
         notificationID = parseInt(tmpParts[1]);
 
@@ -565,7 +573,7 @@ module.exports = function(app, passport) {
                     console.log(deviceID);
                 });
             }
-            serverDB.all('select UserID, DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, deviceRows) {
+            serverDB.all('select UserID, DeviceName, DeviceState, SoftwareUpdateURL, Description, Image from Device where DeviceID = ?', deviceID, function(err, deviceRows) {
                 if (!err) {
                     deviceRows.forEach(function(row) {
                         userID = row.UserID;
@@ -573,6 +581,7 @@ module.exports = function(app, passport) {
                         deviceState = row.DeviceState;
                         description = row.Description;
                         image = row.Image;
+                        softwareUpdateURL = row.SoftwareUpdateURL;
                     });
                 }
 
@@ -607,6 +616,17 @@ module.exports = function(app, passport) {
                             });
                         } else if (action == 'agree') {
                             // transmit file to client
+                            var content = base64_encode(softwareUpdateURL);
+                            var jsonData = {
+                                'type': 'updata',
+                                'action': undefined,
+                                'url': undefined,
+                                'source': undefined,
+                                'content': content,
+                                'software_name': 'update'
+                            };
+                            connMap[userID].send(JSON.stringify(jsonData));
+                            res.json({'status': 'OK'});
                         }
                     } else {
                         // VideoListUpdate / AudioListUpdate

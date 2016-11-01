@@ -110,6 +110,7 @@ serverDB.serialize(function() {
     DeviceState text, \
     Description text, \
     DeviceType text, \
+    SoftwareUpdateURL text, \
     UserID integer, \
     Image text);');
 
