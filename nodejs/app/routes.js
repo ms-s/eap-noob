@@ -1,4 +1,14 @@
 // app/routes.js
+var common = require('./common');
+var connMap = common.connMap;
+
+function base64_encode(file) {
+    // read binary data
+    var bitmap = fs.readFileSync(file);
+    // convert binary data to base64 encoded string
+    return new Buffer(bitmap).toString('base64');
+}
+
 var base64url = require('base64url');
 var crypto = require('crypto');
 var sqlite3 = require('sqlite3').verbose();
@@ -63,72 +73,73 @@ module.exports = function(app, passport) {
             var parseJson;
             var devInfoParam = '%' + device_info + '%';
             db = new sqlite3.Database(conn_str);
-        db.all('SELECT PeerID, PeerInfo FROM peers_connected where peerInfo LIKE ? AND serv_state = ? AND userName IS NULL', devInfoParam, 1, function(err,rows){ //check for error conditions too
-            db.close();
-            if(!err){
-                rows.forEach(function(row) {
-                    deviceDetails[i] = new Object();
-                    deviceDetails[i].peer_id = row.PeerID;
-                    parseJson= JSON.parse(row.PeerInfo);
-                    deviceDetails[i].peer_name = parseJson['PeerName'];
-                    deviceDetails[i].peer_num = parseJson['PeerSNum'];
-                    deviceDetails[i].peer_ssid = parseJson['PeerSSID'];
-                    deviceDetails[i].peer_bssid = parseJson['PeerBSSID'];
+            db.all('SELECT PeerID, PeerInfo FROM peers_connected where peerInfo LIKE ? AND serv_state = ? AND userName IS NULL', devInfoParam, 1, function(err,rows){ //check for error conditions too
+                db.close();
+                if(!err){
+                    rows.forEach(function(row) {
+                        deviceDetails[i] = new Object();
+                        deviceDetails[i].peer_id = row.PeerID;
+                        parseJson= JSON.parse(row.PeerInfo);
+                        deviceDetails[i].peer_name = parseJson['PeerName'];
+                        deviceDetails[i].peer_num = parseJson['PeerSNum'];
+                        deviceDetails[i].peer_ssid = parseJson['PeerSSID'];
+                        deviceDetails[i].peer_bssid = parseJson['PeerBSSID'];
+                        
+                        i++;
+                    });
+                    console.log(JSON.stringify(deviceDetails)); 
+                    res.send(JSON.stringify(deviceDetails));
+                }else{
+                    res.send(JSON.stringify(deviceDetails));
                     
-                    i++;
-                });
-                console.log(JSON.stringify(deviceDetails)); 
-                res.send(JSON.stringify(deviceDetails));
-            }else{
-                res.send(JSON.stringify(deviceDetails));
-                
-            }
-        });
-    }
-});
+                }
+            });
+        }
+    });
 
     app.get('/devices', isLoggedIn, function(req, res) {
+        console.log('Start /devices');
         // userID = req.user.userID;
         var query = req._parsedUrl.query;
         var parts = query.split('=');
-        var userID = parts[1];
+        var userID = parseInt(parts[1]);
         var userName;
 
         serverDB = new sqlite3.Database(serverDBPath);
         var deviceList = [];
 
-        serverDB.all('select UserName from User where UserID = ?', userID, function(err, rows) {
+        serverDB.all('select UserName from User where UserID = ?', userID, function(err, userRows) {
             if (!err) {
-                rows.forEach(function(row) {
+                userRows.forEach(function(row) {
                     userName = row.UserName;
                 });
             }
-
-            serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', function(err, rows) {
-                if (err) {
-                    res.render('devices.ejs', {
-                        UserID: userID,
-                        UserName: userName,
-                        Devices: deviceList
+            console.log(err);
+            console.log(userName);
+            serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', userID, function(err, deviceRows) {
+                if (!err) {
+                    deviceRows.forEach(function(row) {
+                        deviceList.push({
+                            DeviceID: row.DeviceID, 
+                            DeviceName: row.DeviceName,
+                            DeviceState: row.DeviceState,
+                            Description: row.Description,
+                            Image: row.Image
+                        });
                     });
-                    serverDB.close();
-                    return;
                 }
-                rows.forEach(function(row) {
-                    deviceList.push({
-                        DeviceID: row.DeviceID, 
-                        DeviceName: row.DeviceName,
-                        DeviceState: row.DeviceState,
-                        Description: row.Description,
-                        Image: row.Image});
-                });
+
+                console.log(err);
+                console.log(userID);
+                console.log(userName);
+                console.log(deviceList);
                 res.render('devices.ejs', {
                     UserID: userID,
                     UserName: userName,
                     Devices: deviceList
                 });
+
                 serverDB.close();
-                return;
             });
         });
     });
@@ -529,6 +540,7 @@ module.exports = function(app, passport) {
         var action;
         var type;
         var userID;
+        var softwareUpdateURL;
         tmpParts = parts[0].split('=');
         notificationID = parseInt(tmpParts[1]);
 
@@ -561,7 +573,7 @@ module.exports = function(app, passport) {
                     console.log(deviceID);
                 });
             }
-            serverDB.all('select UserID, DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, deviceRows) {
+            serverDB.all('select UserID, DeviceName, DeviceState, SoftwareUpdateURL, Description, Image from Device where DeviceID = ?', deviceID, function(err, deviceRows) {
                 if (!err) {
                     deviceRows.forEach(function(row) {
                         userID = row.UserID;
@@ -569,6 +581,7 @@ module.exports = function(app, passport) {
                         deviceState = row.DeviceState;
                         description = row.Description;
                         image = row.Image;
+                        softwareUpdateURL = row.SoftwareUpdateURL;
                     });
                 }
 
@@ -603,6 +616,19 @@ module.exports = function(app, passport) {
                             });
                         } else if (action == 'agree') {
                             // transmit file to client
+                            var content = base64_encode(softwareUpdateURL);
+                            var jsonData = {
+                                'type': 'updata',
+                                'action': undefined,
+                                'url': undefined,
+                                'source': undefined,
+                                'content': content,
+                                'software_name': 'update'
+                            };
+                            connMap[userID].send(JSON.stringify(jsonData));
+                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            });
+                            res.json({'status': 'OK'});
                         }
                     } else {
                         // VideoListUpdate / AudioListUpdate
