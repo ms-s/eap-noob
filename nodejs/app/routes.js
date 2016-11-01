@@ -626,6 +626,8 @@ module.exports = function(app, passport) {
                                 'software_name': 'update'
                             };
                             connMap[userID].send(JSON.stringify(jsonData));
+                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            });
                             res.json({'status': 'OK'});
                         }
                     } else {
