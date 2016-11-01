@@ -149,6 +149,15 @@
                                     </button>
                                 </div>
                             </li>
+                            <li class="mdl-list__item">
+                                <div style="margin-left:auto; margin-right:auto">
+                                    <i class="material-icons">volume_up</i>
+                                </div>
+                            </li>
+                            <li>
+                                <input class="mdl-slider mdl-js-slider" type="range"
+                                       min="0" max="100" value="0" tabindex="0" id="volumeSlider" oninput="clickSlider(this.value)">
+                            </li>
                         </ul>
                         <% }%>
                     </div>
@@ -161,6 +170,16 @@
 </div>
 </body>
 <script>
+    function clickSlider(value) {
+        console.log("value: " + value);
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==volumn&URL="
+                + videourlnow + "&source=youtube&action=" + value;
+        console.log(url);
+        xhttp.open("POST", url, true)
+        xhttp.send()
+    }
+
     function gotoDevices() {
         window.location = "/devices?userID=<%=UserID%>";
     }
