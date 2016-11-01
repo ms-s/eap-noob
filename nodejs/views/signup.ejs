@@ -46,12 +46,13 @@
 
 <main class="mdl-layout__content">
     <!-- show any messages that come back with authentication -->
-    <% if (message.length > 0) { %>
-    <div class="mdl-grid">
-        <span class="message"><%= message %></span>
+    <div id="msg">
+        <% if (message.length > 0) { %>
+        <div class="mdl-grid">
+            <span class="message"><%= message %></span>
+        </div>
+        <% } %>
     </div>
-    <% } %>
-
     <!-- SIGNUP FORM -->
     <form action="/signup" method="post">
         <div class="mdl-grid">
@@ -67,6 +68,13 @@
             </div>
         </div>
         <div class="mdl-grid">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="password" id="confirmpwd" name="confirmpwd"
+                       oninput="confirmPassword(this.value)">
+                <label class="mdl-textfield__label" for="password">Confirm Password</label>
+            </div>
+        </div>
+        <div class="mdl-grid">
             <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">Signup</button>
         </div>
     </form>
@@ -79,5 +87,20 @@
     </div>
 </main>
 </div>
+
+<script>
+    function confirmPassword(value) {
+        // console.log("check");
+        // console.log(document.getElementById("password").value);
+        // console.log(value);
+        if (document.getElementById("password").value !== value) {
+            document.getElementById("msg").innerHTML = "<div class='mdl-grid'><span class='message'>" +
+                    "Confirm password failed</span></div>";
+        } else {
+            document.getElementById("msg").innerHTML = "";
+        }
+    }
+</script>
+
 </body>
 </html>

@@ -171,11 +171,9 @@
 </body>
 <script>
     function clickSlider(value) {
-        console.log("value: " + value);
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==volumn&URL="
                 + videourlnow + "&source=youtube&action=" + value;
-        console.log(url);
         xhttp.open("POST", url, true)
         xhttp.send()
     }
