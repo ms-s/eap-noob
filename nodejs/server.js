@@ -52,21 +52,24 @@ var server = ws.createServer(property, function (conn) {
     console.log(conn.path);
     // simple userID, anything after '/'
     // should use database here
-    var userID = conn.path.substring(1);
-    conn.on("close", function (code, reason) {
+    var deviceID = conn.path.substring(1);
+    conn.on('close', function (code, reason) {
         console.log("Connection closed")
     });
 
     // parse received text
-    conn.on("text", function(str) {
+    conn.on('text', function(str) {
       msg = JSON.parse(str);
-      if (msg["Type"] == "Metadata") {
-
+      if (msg['Type'] == 'Metadata') {
+        var deviceName = msg['DeviceName'];
+        var deviceType = msg['DeviceType'];
+        var updateSource = msg['UpdateSource'];
+        // need to update database according to deviceID
       } else {
         console.log("Unknown message" + str);
       }
     });
-    // connMap[userID] = conn;
+    // should use device ID as key
     connMap['Lehao'] = conn;
     console.log(connMap);
 }).listen(9000);
