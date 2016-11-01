@@ -1,5 +1,5 @@
 // app/routes.js
-var common = require('./common');
+var common = require('../common');
 var connMap = common.connMap;
 
 function base64_encode(file) {
