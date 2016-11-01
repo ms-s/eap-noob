@@ -2,6 +2,9 @@
 
 // set up ======================================================================
 // get all the tools we need
+var common = require('./common');
+var connMap = common.connMap;
+
 var express  = require('express');
 var app      = express();
 var port     = process.env.PORT || 8080;
@@ -35,9 +38,6 @@ app.use(express.static(__dirname + '/public'));
 
 require('./config/passport')(passport); // pass passport for configuration
 
-// global map for saving user -> connection
-var connMap = {};
-
 var ws = require('nodejs-websocket');
 var property = {
   secure:true,
@@ -55,6 +55,16 @@ var server = ws.createServer(property, function (conn) {
     var userID = conn.path.substring(1);
     conn.on("close", function (code, reason) {
         console.log("Connection closed")
+    });
+
+    // parse received text
+    conn.on("text", function(str) {
+      msg = JSON.parse(str);
+      if (msg["Type"] == "Metadata") {
+
+      } else {
+        console.log("Unknown message" + str);
+      }
     });
     // connMap[userID] = conn;
     connMap['Lehao'] = conn;
@@ -99,6 +109,7 @@ serverDB.serialize(function() {
     DeviceName text, \
     DeviceState text, \
     Description text, \
+    DeviceType text, \
     UserID integer, \
     Image text);');
 

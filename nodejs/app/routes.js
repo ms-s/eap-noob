@@ -1,4 +1,7 @@
 // app/routes.js
+var common = require('./common');
+var connMap = common.connMap;
+
 var base64url = require('base64url');
 var crypto = require('crypto');
 var sqlite3 = require('sqlite3').verbose();
