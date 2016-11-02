@@ -172,7 +172,7 @@
 <script>
     function clickSlider(value) {
         var xhttp = new XMLHttpRequest();
-        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==volumn&URL="
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volumn&URL="
                 + videourlnow + "&source=youtube&action=" + value;
         xhttp.open("POST", url, true)
         xhttp.send()
@@ -253,7 +253,7 @@
         console.log("video now = " + videonamenow)
 
         var xhttp = new XMLHttpRequest();
-        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==video&URL="
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL="
                 + videourlnow + "&source=youtube&action=" + action;
         xhttp.open("POST", url, true)
         xhttp.send()
@@ -294,7 +294,7 @@
         }
 
         var xhttp = new XMLHttpRequest();
-        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==video&URL="
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL="
                 + videourlnow + "&source=youtube&action=" + action;
         xhttp.open("POST", url, true)
         xhttp.send()
