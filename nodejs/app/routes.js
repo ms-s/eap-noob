@@ -626,7 +626,7 @@ module.exports = function(app, passport) {
                                 'software_name': 'update'
                             };
                             // should use device ID as key
-                            connMap['LeHao'].send(JSON.stringify(jsonData));
+                            connMap['Lehao'].send(JSON.stringify(jsonData));
                             serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
                             });
                             res.json({'status': 'OK'});
