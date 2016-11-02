@@ -9,6 +9,7 @@
             height: 160px;
         }
     </style>
+    <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
 </head>
 <body>
 <!-- Always shows a header, even in smaller screens. -->
@@ -117,34 +118,18 @@
                             <img src="images/YouTube-logo-full_color.png"
                                  height="100%" border="0" alt="" style="padding:10px;">
                         </button>
-                        <%if (ContentList.length > 0) {%>
-                        <ul class="demo-list-three mdl-list">
-                            <% ContentList.forEach(function(video) {%>
-                            <li class="mdl-list__item mdl-list__item--three-line">
-                                    <span class="mdl-list__item-primary-content">
-                                        <i class="material-icons mdl-list__item-avatar">person</i>
-                                        <span><%=video.ContentName %></span>
-                                    </span>
-                                <span class="mdl-list__item-secondary-content">
-                                        <a class="mdl-list__item-secondary-action" value-name="<%=video.ContentName%>"
-                                           value-url="<%=video.URL%>" onclick="playVideo(this, true)">
-                                            <i class="material-icons">keyboard_arrow_right</i>
-                                        </a>
-                                    </span>
-                            </li>
-                            <%})%>
-                        </ul>
-                        <ul class="mdl-list">
+
+                        <ul class="mdl-list" id="controlPad">
+                            <li class="mdl-list__item" id="nowPlaying">NOW PLAYING: </li>
                             <li class="mdl-list__item">
                                 <div style="margin-left:auto; margin-right:auto">
-                                    <button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, true)">
+                                    <button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, true)" id="skipPrevious" disabled>
                                         <i class="material-icons">skip_previous</i>
                                     </button>
-                                    <button id="play-button" class="mdl-button mdl-js-button mdl-button--icon" onclick="playVideo(this, false)">
+                                    <button id="play-button" class="mdl-button mdl-js-button mdl-button--icon" onclick="playVideo(this, false)" disabled>
                                         <i class="material-icons">play_arrow</i>
                                     </button>
-                                    </button>
-                                    <button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, false)">
+                                    <button class="mdl-button mdl-js-button mdl-button--icon" id="skipNext" onclick="skip(this, false)" disabled>
                                         <i class="material-icons">skip_next</i>
                                     </button>
                                 </div>
@@ -155,11 +140,12 @@
                                 </div>
                             </li>
                             <li>
-                                <input class="mdl-slider mdl-js-slider" type="range"
-                                       min="0" max="100" value="0" tabindex="0" id="volumeSlider" oninput="clickSlider(this.value)">
+                                <input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="0"
+                                       tabindex="0" id="volumeSlider" oninput="clickSlider(this.value)" disabled>
                             </li>
                         </ul>
-                        <% }%>
+                        <ul class="mdl-list" id="videoContents">
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -170,6 +156,25 @@
 </div>
 </body>
 <script>
+    var ContentList = [];
+    var videourlnow = ""
+    var videonamenow = ""
+    var action="pause" // play/pause
+
+    googleApiClientReady = function() {
+        gapi.auth.init(function() {
+            //window.setTimeout(checkAuth, 1);
+        });
+    }
+
+    function checkAuth() {
+        gapi.auth.authorize({
+            client_id: OAUTH2_CLIENT_ID,
+            scope: OAUTH2_SCOPES,
+            immediate: false
+        }, handleAuthResult);
+    }
+
     function clickSlider(value) {
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==volumn&URL="
@@ -209,43 +214,166 @@
 
     function getVideos(button) {
         //var xhttp = new XMLHttpRequest();
-        console.log(<%=UserID%>)
-        var url = "/contentList?userID=<%=UserID%>&contentType=video&Source=YouTube&deviceID=<%=DeviceID%>"
+
+        checkAuth();
+
+        // console.log(<%=UserID%>)
+        // var url = "/contentList?userID=<%=UserID%>&contentType=video&Source=YouTube&deviceID=<%=DeviceID%>"
         //xhttp.open("POST", url, true)
         //xhttp.send()
-        window.location = url;
+        // window.location = url;
     }
 
-    var videourlnow = ""
-    var videonamenow = ""
-    var action="pause" // play/pause
+    // The client ID is obtained from the {{ Google Cloud Console }}
+    // at {{ https://cloud.google.com/console }}.
+    // If you run this code from a server other than http://localhost,
+    // you need to register your own client ID.
+    var OAUTH2_CLIENT_ID = '822254206365-9fh35jr0c1qqtrrlos8k23enkmm9qb32.apps.googleusercontent.com';
+    var OAUTH2_SCOPES = [
+        'https://www.googleapis.com/auth/youtube'
+    ];
+
+    // Attempt the immediate OAuth 2.0 client flow as soon as the page loads.
+    // If the currently logged-in Google Account has previously authorized
+    // the client specified as the OAUTH2_CLIENT_ID, then the authorization
+    // succeeds with no user intervention. Otherwise, it fails and the
+    // user interface that prompts for authorization needs to display.
+    function checkAuth() {
+        gapi.auth.authorize({
+            client_id: OAUTH2_CLIENT_ID,
+            scope: OAUTH2_SCOPES,
+            immediate: false
+        }, handleAuthResult);
+    }
+
+    // Handle the result of a gapi.auth.authorize() call.
+    function handleAuthResult(authResult) {
+        console.log(authResult);
+        if (authResult && !authResult.error) {
+            // Authorization was successful. Hide authorization prompts and show
+            // content that should be visible after authorization succeeds.
+            $('.pre-auth').hide();
+            $('.post-auth').show();
+            loadAPIClientInterfaces();
+        } else {
+            // Make the #login-link clickable. Attempt a non-immediate OAuth 2.0
+            // client flow. The current function is called when that flow completes.
+            $('#login-link').click(function() {
+                gapi.auth.authorize({
+                    client_id: OAUTH2_CLIENT_ID,
+                    scope: OAUTH2_SCOPES,
+                    immediate: false
+                }, handleAuthResult);
+            });
+        }
+    }
+
+    // Load the client interfaces for the YouTube Analytics and Data APIs, which
+    // are required to use the Google APIs JS client. More info is available at
+    // https://developers.google.com/api-client-library/javascript/dev/dev_jscript#loading-the-client-library-and-the-api
+    function loadAPIClientInterfaces() {
+        gapi.client.load('youtube', 'v3', function() {
+            console.log("abc");
+            handleAPILoaded();
+        });
+    }
+
+    // After the API loads, call a function to enable the search box.
+    function handleAPILoaded() {
+        // $('#search-button').attr('disabled', false);
+        var request = gapi.client.youtube.activities.list({
+            part: 'snippet',
+            maxResults: 20,
+            home: true
+        });
+
+        request.execute(function(response) {
+            var str = JSON.stringify(response.result);
+            console.log(str);
+            showContentList(response.result);
+            showControlPad();
+            //$('#search-container').html('<pre>' + str + '</pre>');
+        });
+    }
+
+    function showContentList(jsonResult) {
+        var jsonData = jsonResult;
+        var items = jsonData['items'];
+        ContentList = [];
+        for (index in items) {
+            var contentName;
+            var description;
+            var imageUrl;
+            var videoUrl;
+            var snippet = items[index]['snippet'];
+            contentName = snippet['title'];
+            description = snippet['description'];
+            imageUrl = snippet['thumbnails']['default']['url'];
+            var parts = imageUrl.split('/');
+            var videoID = parts[4];
+            videoUrl = 'https://www.youtube.com/watch?v=' + videoID;
+            var json = {
+                'ContentName': contentName,
+                'Description': description,
+                'ImageURL': imageUrl,
+                'VideoURL': videoUrl
+            };
+            ContentList.push(json);
+        }
+
+        var txt = "";
+        if (ContentList.length > 0) {
+            ContentList.forEach(function(video) {
+                txt += "<li class='mdl-list__item mdl-list__item--three-line'>";
+                txt += "<span class='mdl-list__item-primary-content'>";
+                txt += "<img src='" + video['ImageURL'] + "' class='mdl-list__item-avatar'>";
+                txt += "<span>" + video['ContentName'].substr(0, 20) + "</span>";
+                txt += "<span class='mdl-list__item-text-body'>" + video['Description'].substr(0, 50) +
+                        "</span></span>";
+                txt += "<span class='mdl-list__item-secondary-content'> " +
+                        "<a class='mdl-list__item-secondary-action' value-name='" + video['ContentName'] +
+                        "'value-url='" + video['VideoURL'] + "' onclick='playVideo(this, true)'>";
+                txt += "<i class='material-icons'>keyboard_arrow_right</i>";
+                txt += "</a></span></li>";
+            });
+        }
+
+        document.getElementById("videoContents").innerHTML = txt;
+    }
+
+    function showControlPad() {
+        document.getElementById("skipPrevious").disabled = false;
+        document.getElementById("play-button").disabled = false;
+        document.getElementById("skipNext").disabled = false;
+        document.getElementById("volumeSlider").disabled = false;
+    }
 
     function skip(buttion, isPrevious) {
-        <%var num = 0%>
+        var num = 0;
         var videoname = "";
         var videourl = "";
 
-        <%if (ContentList.length > 0) {%>
-            videoname = "<%=ContentList[0].ContentName%>"
-            videourl = "<%=ContentList[0].URL%>"
-        <%}%>
+        if (ContentList.length > 0) {
+            videoname = ContentList[0]['ContentName'];
+            videourl = ContentList[0]['VideoURL'];
+        }
 
-        <%for (i = 0; i < ContentList.length; i++) {%>
+        for (i = 0; i < ContentList.length; i++) {
 
-            if ("<%=ContentList[i].ContentName%>" === videonamenow) {
-                console.log(<%=i%>)
+            if (ContentList[i]['ContentName'] === videonamenow) {
+                console.log(i);
 
                 if (isPrevious) {
-                    <%num = (i + ContentList.length - 1) % ContentList.length%>
-                    videoname = "<%=ContentList[num].ContentName%>";
-                    videourl = "<%=ContentList[num].URL%>";
+                    num = (i + ContentList.length - 1) % ContentList.length;
+                    videoname = ContentList[num]['ContentName'];
+                    videourl = ContentList[num]['VideoURL'];
                 } else {
-                    <%num = (i + 1) % ContentList.length%>
-                    videoname = "<%=ContentList[num].ContentName%>";
-                    videourl = "<%=ContentList[num].URL%>";
+                    num = (i + 1) % ContentList.length;
+                    videoname = ContentList[num]['ContentName'];
+                    videourl = ContentList[num]['VideoURL'];
                 }
             }
-        <%}%>
+        }
 
         videonamenow = videoname;
         videourlnow = videourl;
@@ -261,12 +389,12 @@
 
     function playVideo(button, bylist) {
         action = "play"
-        <%if (ContentList.length > 0) {%>
+        if (ContentList.length > 0) {
             if (videonamenow === "") {
-                videonamenow = "<%=ContentList[0].ContentName%>";
-                videourlnow = "<%=ContentList[0].URL%>";
+                videonamenow = ContentList[0]['ContentName'];
+                videourlnow = ContentList[0]['VideoURL'];
             }
-        <%}%>
+        }
 
         if (!bylist) {
             if (document.getElementById("play-button").innerHTML.indexOf("pause") >= 0) {
