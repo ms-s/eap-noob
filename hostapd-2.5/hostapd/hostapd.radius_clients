@@ -1,2 +1,2 @@
 # RADIUS client configuration for the RADIUS server
-0.0.0.0/0	radius1234
+128.2.177.8/32 radius1234

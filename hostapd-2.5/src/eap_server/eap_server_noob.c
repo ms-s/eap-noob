@@ -1278,7 +1278,7 @@ static int eap_noob_serv_ctxt_init( struct eap_noob_serv_context * data, struct 
 
 		/* Setup DB */
 		/* DB file name for the server */
-		data->db_name = (char *) os_strdup("peer_connection_db");
+		data->db_name = (char *) os_strdup("/var/peer_connection_db");
 		/* DB Table name */
 		data->db_table_name = (char *) os_strdup("peers_connected");
 

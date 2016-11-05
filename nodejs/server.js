@@ -29,6 +29,9 @@ var options = {
     rejectUnauthorized: false
 };
 
+var WebSocketServer = require('ws').Server;
+var ws = require('nodejs-websocket')
+
 app.use(express.static(__dirname + '/public'));
 
 require('./config/passport')(passport); // pass passport for configuration
@@ -62,7 +65,12 @@ https.createServer(options, app).listen(8080, function () {
    console.log('Started!');
 });
 
-
-//app.listen(port);
-
 console.log('App is running on port ' + port);
+
+//db = new sqlite3.Database(conn_str);
+//db.each("SELECT PeerID,kz from peers_connected", function(err, row) {
+//    console.log(row.PeerID + ":" + row.kz);
+//    if (row.PeerID == "k9aGQCEIrjVZYNwXGOk43Y0pMx7AI2j09rFX3jEtBxqzkUuZGO3KL39xze7f") {
+//	console.log("ok");
+//    }	
+//});

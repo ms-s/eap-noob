@@ -19,7 +19,7 @@
     "express-session": "~1.0.0",
     "base64url": "~2.0.0",
     "python-shell": "~0.4.0",
-    "websocket": "1.0.23"
+    "ws": "~1.1.1"
   },
   "scripts": {
     "start": "node server.js"
