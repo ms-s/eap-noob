@@ -2,7 +2,7 @@ var sqlite3 = require('sqlite3').verbose();
 var db;
 
 // db = new sqlite3.Database('testdb');
-db = new sqlite3.Database('../../../serverDB');
+db = new sqlite3.Database('/var/serverDB');
 db.serialize(function() {
 	db.run('create table if not exists User \
 		(UserID integer primary key autoincrement, \
