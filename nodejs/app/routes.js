@@ -44,20 +44,23 @@ module.exports = function(app, passport) {
     // HOME PAGE (with login links) ========
     // =====================================
     app.get('/', function(req, res) {
+        console.log('GET /');
+
         res.render('login.ejs', { message: req.flash('loginMessage')}); // load the index.ejs file
     });
 
     // =====================================
     // LOGIN ===============================
     // =====================================
-    app.get('/login', function(req, res) {
-
+    app.get('GET /login', function(req, res) {
+    console.log('GET /login');
     // render the page and pass in any flash data if it exists
     res.render('login.ejs', { message: req.flash('loginMessage')}); 
 });
 
     
     app.get('/getDevices', isLoggedIn, function(req, res) {
+        console.log('GET /getDevices');
 
         var device_info = req.query.DeviceInfo;
         var queryObject = url.parse(req.url,true).query;
@@ -256,7 +259,7 @@ module.exports = function(app, passport) {
  });
 
     app.get('/python', function(req, res) {
-
+        console.log('GET /python');
         // render the page and pass in any flash data if it exists
         var parseJ;
         PythonShell.run('oobmessage.py', options, function (err,results) {
@@ -272,6 +275,7 @@ module.exports = function(app, passport) {
     // SIGNUP ==============================
     // =====================================
     app.get('/signup', function(req, res) {
+        console.log('GET /signup');
 
         res.render('signup.ejs', { message: req.flash('signupMessage') });
     });
@@ -676,11 +680,15 @@ module.exports = function(app, passport) {
     // LOGOUT ==============================
     // =====================================
     app.get('/logout', function(req, res) {
+        console.log('GET /logout');
+
         req.logout();
         res.redirect('/');
     });
 
     app.get('/addDevice',isLoggedIn, function(req, res) {
+        console.log('GET /addDevice');
+
         res.render('deviceAdd.ejs',{url : configDB.url});
     });
 
@@ -705,6 +713,8 @@ module.exports = function(app, passport) {
 
     // process QR-code
     app.get('/QRcode/',isLoggedIn, function (req, res) {
+        console.log('GET /QRcode');
+
         var peer_id = req.query.PeerId;
         var noob = req.query.Noob;
         var hoob = req.query.Hoob;
@@ -746,6 +756,8 @@ module.exports = function(app, passport) {
      }
  });
     app.get('/stateUpdate', function(req, res) {
+        console.log('GET /stateUpdate');
+
         var peer_id = req.query.PeerId;
         var state = req.query.State;
         var queryObject = url.parse(req.url,true).query;
@@ -770,7 +782,8 @@ module.exports = function(app, passport) {
  });
 
     app.get('/deleteDevice', function(req, res) {
-        //console.log(req);
+        console.log('GET /deleteDevice');
+
         var peer_id = req.query.PeerId;
         var queryObject = url.parse(req.url,true).query;
         var len = Object.keys(queryObject).length;
