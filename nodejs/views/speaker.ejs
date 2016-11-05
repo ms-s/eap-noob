@@ -1,0 +1,251 @@
+<!-- views/pages/index.ejs -->
+<!-- todo: discuss about the speaker login-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./head %>
+    <style>
+        .demo-card-notification.mdl-card {
+            height: 160px;
+        }
+    </style>
+</head>
+<body>
+
+<dialog class="mdl-dialog">
+    <h4 class="mdl-dialog__title">Spotify User Login</h4>
+    <div class="mdl-dialog__content">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="s-email" name="email">
+            <label class="mdl-textfield__label" for="email">Username</label>
+        </div>
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="password" id="s-password" name="password">
+            <label class="mdl-textfield__label" for="password">Password</label>
+        </div>
+    </div>
+    <div class="mdl-dialog__actions">
+        <button type="button" class="mdl-button" style="margin-right: auto; margin-left: auto;">Login</button>
+    </div>
+</dialog>
+
+<!-- Always shows a header, even in smaller screens. -->
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--no-drawer-button">
+    <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+            <!-- Title -->
+            <span class="mdl-layout-title"><%=UserID + "\'S HUB" %></span>
+            <!-- Add spacer, to align navigation to the right -->
+            <div class="mdl-layout-spacer"></div>
+            <!-- Navigation. We hide it in small screens. -->
+            <button id="demo-menu-lower-right"
+                    class="mdl-button mdl-js-button mdl-button--icon">
+                <i class="material-icons">more_vert</i>
+            </button>
+            <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
+                for="demo-menu-lower-right">
+                <li class="mdl-menu__item" onclick="gotoAddDevice()">Add Devices</li>
+                <li class="mdl-menu__item" onclick="gotoLogout()">Log Out</li>
+            </ul>
+        </div>
+    </header>
+    <main class="mdl-layout__content">
+        <div class="page-content">
+            <div class="mdl-grid">
+                <div class="mdl-cell mdl-cell--4-col">
+                    <div class="mdl-card mdl-shadow--4dp" style="width:100%;">
+                        <div class="mdl-card__media" style="background-color: white">
+                            <img src="images/LED-TV-From-Samsung.png"
+                                 width="100%" height="100%" border="0" alt="" style="padding:10px;">
+                        </div>
+                        <div class="mdl-card__title">
+                            <h2 class="mdl-card__title-text">
+                                <%=DeviceName %>
+                            </h2>
+                        </div>
+                        <div class="mdl-card__supporting-text">
+                            <%=Description %>
+                        </div>
+                        <button id="show-dialog" type="button" class="mdl-button">Show Dialog</button>
+                    </div>
+                </div>
+                <div class="mdl-cell mdl-cell--4-col">
+                    <div class="mdl-card mdl-shadow--4dp" style="width:100%;">
+                        <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;" onclick="showLogin()">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Spotify_logo_with_text.svg/500px-Spotify_logo_with_text.svg.png"
+                                 height="100%" border="0" alt="" style="padding:10px;">
+                        </button>
+                        <ul class="demo-list-three mdl-list">
+                            <li class="mdl-list__item mdl-list__item--three-line">
+                                <div style="margin-left:auto; margin-right:auto">
+                                    <button class="mdl-button mdl-js-button mdl-button--icon">
+                                        <i class="material-icons">skip_previous</i>
+                                    </button>
+                                    <button id="play-button" class="mdl-button mdl-js-button mdl-button--icon" onclick="playVideo(this, false)">
+                                        <i class="material-icons">play_arrow</i>
+                                    </button>
+                                    </button>
+                                    <button class="mdl-button mdl-js-button mdl-button--icon">
+                                        <i class="material-icons">skip_next</i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="mdl-list__item">
+                                <div style="margin-left:auto; margin-right:auto">
+                                    <i class="material-icons">volume_up</i>
+                                </div>
+                            </li>
+                            <li>
+                                <input class="mdl-slider mdl-js-slider" type="range"
+                                       min="0" max="100" value="0" tabindex="0" id="volumeSlider" oninput="clickSlider(this.value)">
+                            </li>
+                        </ul>
+                        <%if (ContentList.length > 0) {%>
+                        <ul class="demo-list-three mdl-list">
+                            <% ContentList.forEach(function(video) {%>
+                            <li class="mdl-list__item mdl-list__item--three-line">
+                                    <span class="mdl-list__item-primary-content">
+                                        <i class="material-icons mdl-list__item-avatar">person</i>
+                                        <span><%=video.name %></span>
+                                        <span class="mdl-list__item-text-body">
+                                            <%=video.description%>
+                                        </span>
+                                    </span>
+                                <span class="mdl-list__item-secondary-content">
+                                        <a class="mdl-list__item-secondary-action" value-name="<%=video.name%>"
+                                           value-url="<%=video.url%>" onclick="playVideo(this, true)">
+                                            <i class="material-icons">keyboard_arrow_right</i>
+                                        </a>
+                                    </span>
+                            </li>
+                            <%})%>
+                        </ul>
+                        <%}%>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mdl-mini-footer"
+            style="background-color: #ffffff;
+                    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 1);
+                    padding-top: 0px; padding-right: 0px; padding-left: 0px; padding-bottom: 28px">
+        <div class="container-fluid" style="width:100%">
+            <div class="row">
+                <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
+                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;" onclick="gotohome()">
+                        <div style="height: 24px; padding: 0px">
+                            <i class="material-icons" style="color: #000000">home</i>
+                        </div>
+                        <div>
+                            <text style="font-size: 12px; color: #000000">home</text>
+                        </div>
+                    </button>
+                </div>
+                <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
+                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;" onclick="gotodevices()">
+                        <div style="height: 24px; padding: 0px">
+                            <i class="material-icons" style="color: #00695C; opacity:26%">devices</i>
+                        </div>
+                        <div>
+                            <text style="font-size: 14px; height: 12px; color: #00695C; opacity:26%">devices</text>
+                        </div>
+                    </button>
+                </div>
+                <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
+                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;">
+                        <div style="height: 24px; padding: 0px">
+                            <i class="material-icons" style="color: #000000">settings</i>
+                        </div>
+                        <div>
+                            <text style="font-size: 12px; height: 12px; color: #000000; opacity:26%">settings</text>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+</body>
+<script>
+    var dialog = document.querySelector('dialog');
+    var showDialogButton = document.querySelector('#show-dialog');
+    if (! dialog.showModal) {
+        dialogPolyfill.registerDialog(dialog);
+    }
+    showDialogButton.addEventListener('click', function() {
+        dialog.showModal();
+    });
+    dialog.querySelector('.close').addEventListener('click', function() {
+        dialog.close();
+    });
+    
+    function showLogin() {
+        
+    }
+
+    function clickSlider(value) {
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==volumn&URL="
+                + videourlnow + "&source=youtube&action=" + value;
+        xhttp.open("POST", url, true)
+        xhttp.send()
+    }
+
+    function gotoAddDevice() {
+        window.location = "/addDevice";
+    }
+
+    function gotoLogout() {
+        window.location = "/logout";
+    }
+
+    var videourlnow = ""
+    var videonamenow = ""
+    function playVideo(button, bylist) {
+        var action = "play"
+
+        if (!bylist) {
+            if (document.getElementById("play-button").innerHTML.indexOf("pause") >= 0) {
+                document.getElementById("play-button").innerHTML = "<i class=\"material-icons\">play_arrow</i>"
+                action = "pause"
+            } else {
+                document.getElementById("play-button").innerHTML = "<i class=\"material-icons\">pause</i>"
+                action = "play"
+            }
+        } else {
+            console.log("video now name:" + videonamenow)
+            console.log("button name:" + button.getAttribute("value-name"))
+            if (document.getElementById("play-button").innerHTML.indexOf("pause") >= 0
+                    && (videonamenow != "") && (videonamenow === button.getAttribute("value-name"))) {
+                document.getElementById("play-button").innerHTML = "<i class=\"material-icons\">play_arrow</i>"
+                videonamenow = button.getAttribute("value-name")
+                videourlnow = button.getAttribute("value-url")
+                action = "pause"
+            } else {
+                document.getElementById("play-button").innerHTML = "<i class=\"material-icons\">pause</i>"
+                videonamenow = button.getAttribute("value-name")
+                videourlnow = button.getAttribute("value-url")
+                action = "play"
+            }
+        }
+
+        var xhttp = new XMLHttpRequest();
+        var url = "/controlDisplay?userID=<%=UserID%>&type=audio&action=" + action + "&url="
+                + videourlnow + "&source=spotify"
+        xhttp.open("POST", url, true)
+        xhttp.send()
+    }
+
+    function gotoDevices() {
+        window.location = "/devices?userID=<%=UserID%>";
+    }
+
+    function gotohome() {
+        window.location = "/";
+    }
+
+</script>
+
+</html>
