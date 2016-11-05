@@ -1,6 +1,7 @@
 // app/routes.js
 var common = require('../common');
 var connMap = common.connMap;
+var fs = require('fs');
 
 function base64_encode(file) {
     // read binary data
@@ -598,8 +599,8 @@ module.exports = function(app, passport) {
 
                     if (type == 'SoftwareUpdate') {
                         if (action == 'cancel') {
-                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                            });
+                            // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            // });
                             res.json({'status': 'OK'});
                         } else if (action == 'details') {
                             console.log(userID);
@@ -616,6 +617,9 @@ module.exports = function(app, passport) {
                             });
                         } else if (action == 'agree') {
                             // transmit file to client
+                            console.log('SOFTWARE_UPDATE_URL');
+                            console.log(softwareUpdateURL);
+
                             var content = base64_encode(softwareUpdateURL);
                             var jsonData = {
                                 'type': 'updata',
@@ -627,15 +631,15 @@ module.exports = function(app, passport) {
                             };
                             // should use device ID as key
                             connMap['Lehao'].send(JSON.stringify(jsonData));
-                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                            });
+                            // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            // });
                             res.json({'status': 'OK'});
                         }
                     } else {
                         // VideoListUpdate / AudioListUpdate
                         if (action == 'cancel') {
-                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                            });
+                            // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            // });
                             res.json({'status': 'OK'});
                         } else if (action == 'details') {
                             console.log(userID);
@@ -662,6 +666,9 @@ module.exports = function(app, passport) {
 
     app.get('/checkUpdate', isLoggedIn, function(req, res) {
         var query = req._parsedUrl.query;
+        // if (query == null) {
+        //     return;
+        // }
         var parts = query.split('=');
         var userID = parts[1];
         var notificationList = [];
