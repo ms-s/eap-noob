@@ -52,8 +52,7 @@ module.exports = function(app, passport) {
     // =====================================
     app.get('/login', function(req, res) {
 
-        // render the page and pass in any flash data if it exists
-    //console.log(req.session.returnTo);
+    // render the page and pass in any flash data if it exists
     res.render('login.ejs', { message: req.flash('loginMessage')}); 
 });
 
@@ -99,9 +98,10 @@ module.exports = function(app, passport) {
     });
 
     app.get('/devices', isLoggedIn, function(req, res) {
-        console.log('Start /devices');
-        // userID = req.user.userID;
         var query = req._parsedUrl.query;
+        console.log('GET /devices');
+        console.log('query: ' + query);
+
         var parts = query.split('=');
         var userID = parseInt(parts[1]);
         var userName;
@@ -115,8 +115,6 @@ module.exports = function(app, passport) {
                     userName = row.UserName;
                 });
             }
-            console.log(err);
-            console.log(userName);
             serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', userID, function(err, deviceRows) {
                 if (!err) {
                     deviceRows.forEach(function(row) {
@@ -130,10 +128,6 @@ module.exports = function(app, passport) {
                     });
                 }
 
-                console.log(err);
-                console.log(userID);
-                console.log(userName);
-                console.log(deviceList);
                 res.render('devices.ejs', {
                     UserID: userID,
                     UserName: userName,
@@ -147,6 +141,9 @@ module.exports = function(app, passport) {
 
     app.get('/device', isLoggedIn, function(req, res){
         var query = req._parsedUrl.query;
+        console.log('GET /device');
+        console.log('query: ' + query);
+
         var parts = query.split("=");
         var deviceID = parseInt(parts[1]);
         var deviceName = 'Error';
@@ -160,7 +157,7 @@ module.exports = function(app, passport) {
         serverDB.all('select UserID, DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, rows) {
             if (!err) {
                 rows.forEach(function(row) {
-                    userID = row.userID;
+                    userID = row.UserID;
                     deviceName = row.DeviceName;
                     deviceState = row.DeviceState;
                     description = row.Description;
@@ -195,7 +192,8 @@ module.exports = function(app, passport) {
     });
 
     app.get('/insertDevice', function(req, res) {
-        //console.log(req);
+        console.log('GET /insertDevice');
+
         var peer_id = req.query.PeerId;
         var queryObject = url.parse(req.url,true).query;
         var len = Object.keys(queryObject).length;
@@ -230,11 +228,8 @@ module.exports = function(app, passport) {
                         var hoob = parseJ['hoob'];
                         var hash = crypto.createHash('sha256');
                         var hash_str = noob+'AFARMERLIVEDUNDERTHEMOUNTAINANDGREWTURNIPSFORALIVING'
-                    //console.log(hash_str);
                     hash.update(hash_str);
                     var hint =  base64url.encode(hash.digest());
-                    //console.log(hint.slice(0,22));
-                    //console.log(hint.slice(0,32));
 
                     serverDB.all('select UserID from User where UserName = ?', req.user.username, function(err, userRows) {
                         userRows.forEach(function(row) {
@@ -263,7 +258,6 @@ module.exports = function(app, passport) {
     app.get('/python', function(req, res) {
 
         // render the page and pass in any flash data if it exists
-        //console.log(req.session.returnTo)i;
         var parseJ;
         PythonShell.run('oobmessage.py', options, function (err,results) {
             if (err) console.log (err);
@@ -377,6 +371,9 @@ module.exports = function(app, passport) {
     app.get('/contentList', isLoggedIn, function(req, res) {
         serverDB = new sqlite3.Database(serverDBPath);
         var query = req._parsedUrl.query;
+        console.log('GET /contentList');
+        console.log('query: ' + query);
+
         var parts = query.split('&');
         var tmpParts = parts[0].split('=');
         var userID = tmpParts[1];
@@ -430,8 +427,6 @@ module.exports = function(app, passport) {
                         });
 
                     }
-                    console.log("ContentList: " + contentList);
-                    console.log("ContentList.ContentName: " + contentList[0].ContentName);
 
                     res.render('display.ejs', {
                         DeviceID: deviceID,
@@ -454,6 +449,9 @@ module.exports = function(app, passport) {
         serverDB = new sqlite3.Database(serverDBPath);
         var userID;
         var userName = req.user.username;
+        console.log('GET /profile');
+        console.log('userName: ' + userName);
+
         var notificationList = [];
         var deviceList = [];
 
@@ -470,8 +468,6 @@ module.exports = function(app, passport) {
             }
             userRows.forEach(function(row) {
                 userID = row.UserID;
-                console.log('userID');
-                console.log(userID);
             });
             serverDB.all('select NotificationID, DeviceID, NotificationType, Description from Notification where UserID = ?', userID, function(err, notificationRows) {
                 if (err) {
@@ -491,8 +487,6 @@ module.exports = function(app, passport) {
                         NotificationType: row.NotificationType,
                         Description: row.Description});
                 });
-                console.log('notificationList');
-                console.log(notificationList);
 
                 serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
                     if (err) {
@@ -512,13 +506,8 @@ module.exports = function(app, passport) {
                             Image: row.Image,
                             Description: row.Description});
                     });
-                    console.log('deviceList');
-                    console.log(deviceList);
 
                     // successful
-                    console.log('/profile successful');
-                    console.log(userID);
-                    console.log(notificationList);
                     res.render('profile.ejs', {
                         UserID: userID,
                         UserName: userName,
@@ -535,6 +524,9 @@ module.exports = function(app, passport) {
     app.get('/notification', isLoggedIn, function(req, res) {
         serverDB = new sqlite3.Database(serverDBPath);
         var query = req._parsedUrl.query;
+        console.log('GET /notification');
+        console.log('Query: ' + query);
+
         var parts = query.split('&');
         var tmpParts;
         var notificationID;
@@ -561,17 +553,10 @@ module.exports = function(app, passport) {
         var contentList = [];
         var deviceID;
 
-        console.log('notification');
-        console.log(notificationID);
-        console.log(action);
-        console.log(type);
-
         serverDB.all('select DeviceID from Notification where NotificationID = ?', notificationID, function(err, rows) {
             if (!err) {
                 rows.forEach(function(row) {
                     deviceID = row.DeviceID;
-                    console.log('deviceID');
-                    console.log(deviceID);
                 });
             }
             serverDB.all('select UserID, DeviceName, DeviceState, SoftwareUpdateURL, Description, Image from Device where DeviceID = ?', deviceID, function(err, deviceRows) {
@@ -603,8 +588,6 @@ module.exports = function(app, passport) {
                             // });
                             res.json({'status': 'OK'});
                         } else if (action == 'details') {
-                            console.log(userID);
-
                             res.render('display.ejs', {
                                 DeviceID: deviceID,
                                 UserID: userID,
@@ -617,8 +600,6 @@ module.exports = function(app, passport) {
                             });
                         } else if (action == 'agree') {
                             // transmit file to client
-                            console.log('SOFTWARE_UPDATE_URL');
-                            console.log(softwareUpdateURL);
 
                             var content = base64_encode(softwareUpdateURL);
                             var jsonData = {
@@ -642,8 +623,6 @@ module.exports = function(app, passport) {
                             // });
                             res.json({'status': 'OK'});
                         } else if (action == 'details') {
-                            console.log(userID);
-
                             res.render('display.ejs', {
                                 DeviceID: deviceID,
                                 UserID: userID,
@@ -666,6 +645,8 @@ module.exports = function(app, passport) {
 
     app.get('/checkUpdate', isLoggedIn, function(req, res) {
         var query = req._parsedUrl.query;
+        console.log('GET /checkUpdate');
+        console.log('Query: ' + query);
         // if (query == null) {
         //     return;
         // }
