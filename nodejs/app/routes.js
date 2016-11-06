@@ -716,6 +716,7 @@ module.exports = function(app, passport) {
         console.log('GET /QRcode');
 
         var peer_id = req.query.PeerId;
+
         var noob = req.query.Noob;
         var hoob = req.query.Hoob;
         var queryObject = url.parse(req.url,true).query;
@@ -723,37 +724,45 @@ module.exports = function(app, passport) {
 
         if(len != 3 || peer_id == undefined || noob == undefined || hoob == undefined)
         {
-         req.flash('profileMessage','Wrong query String! Please try again with proper Query!!' );
-         res.redirect('/profile');
-     }else if(noob.length != 22 || hoob.length != 22){
+            req.flash('profileMessage','Wrong query String! Please try again with proper Query!!' );
+            res.redirect('/profile');
+        }else if(noob.length != 22 || hoob.length != 22){
 
-         console.log("Updating Error!!!" + peer_id);
-         db = new sqlite3.Database(conn_str);
+            console.log("Updating Error!!!" + peer_id);
+            db = new sqlite3.Database(conn_str);
 
-         db.serialize(function() {
-           var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, errorCode = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
-           stmt.run(1234,"","",3,req.user.username,2,peer_id);
-           stmt.finalize();
-       });
+        db.serialize(function() {
+            var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, errorCode = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
+            stmt.run(1234,"","",3,req.user.username,2,peer_id);
+            stmt.finalize();
+        });
 
-         db.close();
-         req.flash('profileMessage','Invalid Data');
-         res.redirect('/profile');
+            db.close();
+            req.flash('profileMessage','Invalid Data');
+            res.redirect('/profile');
 
-     }else{
+        }else{
+            // correct information
+            db = new sqlite3.Database(conn_str);
+            db.serialize(function() {
+                var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
+                stmt.run(1234,noob,hoob,req.user.username,2,peer_id);
+                stmt.finalize();
+                db.close();
+            });
 
-         db = new sqlite3.Database(conn_str);
-
-         db.serialize(function() {
-           var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
-           stmt.run(1234,noob,hoob,req.user.username,2,peer_id);
-           stmt.finalize();
-       });
-
-         db.close();
-         req.flash('profileMessage','Received Successfully');
-         res.redirect('/profile');
-     }
+            serverDB = new sqlite3.Database(serverDBPath);
+            serverDB.run(
+                'insert into Device (ConnectionID) \
+                values(?)',
+                peer_id,
+                function(err, row) {
+                    serverDB.close();
+                    req.flash('profileMessage','Received Successfully');
+                    res.redirect('/profile');
+                }
+            );
+        }
  });
     app.get('/stateUpdate', function(req, res) {
         console.log('GET /stateUpdate');
@@ -771,7 +780,6 @@ module.exports = function(app, passport) {
          console.log('req received');
          db = new sqlite3.Database(conn_str);
          db.get('SELECT serv_state,errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
-
             db.close();
             if (!row){res.json({"state": "No record found.","state_num":"0"});}
             else if(row.errorCode) { res.json({"state":error_info[parseInt(row.errorCode)], "state_num":"0"}); console.log(row.errorCode) }
