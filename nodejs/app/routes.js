@@ -786,8 +786,10 @@ module.exports = function(app, passport) {
                 var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
                 stmt.run(1234,noob,hoob,req.user.username,2,peer_id);
                 stmt.finalize();
-                db.close();
             });
+            db.close();
+            req.flash('profileMessage','Received Successfully');
+            res.redirect('/profile');
 
             serverDB = new sqlite3.Database(serverDBPath);
             serverDB.run(
@@ -796,8 +798,6 @@ module.exports = function(app, passport) {
                 peer_id,
                 function(err, row) {
                     serverDB.close();
-                    req.flash('profileMessage','Received Successfully');
-                    res.redirect('/profile');
                 }
             );
         }
