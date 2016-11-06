@@ -60,26 +60,44 @@ var server = ws.createServer(property, function (conn) {
 
     // parse received text
     conn.on('text', function(str) {
-      msg = JSON.parse(str);
-      if (msg['Type'] == 'Metadata') {
-        var deviceName = msg['DeviceName'];
-        var deviceType = msg['DeviceType'];
-        var updateSource = msg['UpdateSource'];
-        // need to update database according to deviceID
-        var deviceID;
-        serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
-            deviceID = row.DeviceID;
-            serverDB.serialize(function() {
-                var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, UpdateSource = ? WHERE DeviceID = ?");
-                stmt.run(deviceName, deviceType, updateSource, deviceID);
-                stmt.finalize();
-                serverDB.close();
+        msg = JSON.parse(str);
+        if (msg['Type'] == 'Metadata') {
+            var deviceName = msg['DeviceName'];
+            var deviceType = msg['DeviceType'];
+            var updateSource = msg['UpdateSource'];
+            // need to update database according to deviceID
+            var deviceID;
+            serverDB = new sqlite3.Database(serverDBPath);
+            serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
+                deviceID = row.DeviceID;
+                serverDB.serialize(function() {
+                    var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, UpdateSource = ? WHERE DeviceID = ?");
+                    stmt.run(deviceName, deviceType, updateSource, deviceID);
+                    stmt.finalize();
+                    serverDB.close();
+                });
             });
-        });
-      } else {
-        console.log("Unknown message" + str);
-      }
+        } else if (msg['Type'] == '') {
+            serverDB = new sqlite3.Database(serverDBPath);
+            var contentList = msg['ContentList'];
+            var deviceID;
+            var userID;
+            serverDB.get('select DeviceID, UserID from Device where ConnectionID = ?', connectionID, function(err, row) {
+                deviceID = row.DeviceID;
+                userID = row.UserID;
+                serverDB.serialize(function() {
+                    var stmt = serverDB.prepare('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
+                        values(?, ?, ?, ?, ?)');
+                    for (index in contentList) {
+                        var content = contentList[index];
+                        stmt.run(content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID);
+                    }
+                })
+            });
+            serverDB.close();
+        } else {
+            console.log("Unknown message" + str);
+        }
     });
 
     var deviceID;
