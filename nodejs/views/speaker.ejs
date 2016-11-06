@@ -1,5 +1,4 @@
 <!-- views/pages/index.ejs -->
-<!-- todo: discuss about the speaker login-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +34,7 @@
     <header class="mdl-layout__header">
         <div class="mdl-layout__header-row">
             <!-- Title -->
-            <span class="mdl-layout-title"><%=UserID + "\'S HUB" %></span>
+            <span class="mdl-layout-title"><%=DeviceName %></span>
             <!-- Add spacer, to align navigation to the right -->
             <div class="mdl-layout-spacer"></div>
             <!-- Navigation. We hide it in small screens. -->
@@ -110,45 +109,7 @@
         </div>
     </main>
 
-    <footer class="mdl-mini-footer"
-            style="background-color: #ffffff;
-                    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 1);
-                    padding-top: 0px; padding-right: 0px; padding-left: 0px; padding-bottom: 28px">
-        <div class="container-fluid" style="width:100%">
-            <div class="row">
-                <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
-                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;" onclick="gotohome()">
-                        <div style="height: 24px; padding: 0px">
-                            <i class="material-icons" style="color: #000000">home</i>
-                        </div>
-                        <div>
-                            <text style="font-size: 12px; color: #000000">home</text>
-                        </div>
-                    </button>
-                </div>
-                <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
-                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;" onclick="gotodevices()">
-                        <div style="height: 24px; padding: 0px">
-                            <i class="material-icons" style="color: #00695C; opacity:26%">devices</i>
-                        </div>
-                        <div>
-                            <text style="font-size: 14px; height: 12px; color: #00695C; opacity:26%">devices</text>
-                        </div>
-                    </button>
-                </div>
-                <div class="col-xs-4 col-md-4" style="height: 56px; padding: 0px">
-                    <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;">
-                        <div style="height: 24px; padding: 0px">
-                            <i class="material-icons" style="color: #000000">settings</i>
-                        </div>
-                        <div>
-                            <text style="font-size: 12px; height: 12px; color: #000000; opacity:26%">settings</text>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <% include ./footer-devices.ejs %>
 </div>
 </body>
 <script>
@@ -176,7 +137,7 @@
 
         var xhttp = new XMLHttpRequest();
         var url = "/getAudio?UserID=<%=UserID%>&ContentType=Audio&Source=Spotify&SourceUserName=" + s_username
-                + "&SourcePassword=" + s_password;
+                + "&SourcePassword=" + s_password + "&DeviceID=" + "<%=DeviceID%>";
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 var txt = "";
@@ -224,7 +185,7 @@
     }
 
     function gotoAddDevice() {
-        window.location = "/addDevice";
+        //window.location = "/addDevice";
     }
 
     function gotoLogout() {
@@ -275,8 +236,8 @@
         window.location = "/devices?userID=<%=UserID%>";
     }
 
-    function gotohome() {
-        window.location = "/";
+    function gotoHome() {
+        window.location = "/profile";
     }
 
 </script>
