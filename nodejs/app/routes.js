@@ -179,7 +179,7 @@ module.exports = function(app, passport) {
                     });
                 }
 
-                res.render('speaker.ejs', {
+                res.render('display.ejs', {
                     DeviceID: deviceID,
                     UserID: userID,
                     DeviceName: deviceName,
@@ -432,7 +432,7 @@ module.exports = function(app, passport) {
 
                     }
 
-                    res.render('speaker.ejs', {
+                    res.render('display.ejs', {
                         DeviceID: deviceID,
                         UserID: userID,
                         DeviceName: deviceName,
