@@ -797,9 +797,9 @@ module.exports = function(app, passport) {
             console.log('prepare to add uninitialized device into database')
             serverDB = new sqlite3.Database(serverDBPath);
             serverDB.run(
-                'insert into Device (ConnectionID) \
-                values(?)',
-                peer_id,
+                'insert into Device (ConnectionID, UserID) \
+                values(?, ?)',
+                peer_id, 1,
                 function(err, row) {
                     if (err) {
                         console.log('ERROR: ' + err);
