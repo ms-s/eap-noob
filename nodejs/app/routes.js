@@ -179,7 +179,7 @@ module.exports = function(app, passport) {
                     });
                 }
 
-                res.render('speaker.ejs', {
+                res.render('display.ejs', {
                     DeviceID: deviceID,
                     UserID: userID,
                     DeviceName: deviceName,
@@ -432,7 +432,7 @@ module.exports = function(app, passport) {
 
                     }
 
-                    res.render('speaker.ejs', {
+                    res.render('display.ejs', {
                         DeviceID: deviceID,
                         UserID: userID,
                         DeviceName: deviceName,
@@ -776,7 +776,7 @@ module.exports = function(app, passport) {
         {
          console.log("Its wrong Query");
          res.json({"error":"Wrong Query."});
-     }else{
+        }else{
          console.log('req received');
          db = new sqlite3.Database(conn_str);
          db.get('SELECT serv_state,errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
