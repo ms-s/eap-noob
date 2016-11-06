@@ -47,12 +47,13 @@ var property = {
   requestCert: true,
   rejectUnauthorized: false
 };
+
 var server = ws.createServer(property, function (conn) {
     console.log("New connection requested to: " + conn.path);
     console.log(conn.path);
     // simple userID, anything after '/'
     // should use database here
-    var deviceID = conn.path.substring(1);
+    var connectionID = conn.path.substring(1);
     conn.on('close', function (code, reason) {
         console.log("Connection closed")
     });
@@ -65,11 +66,29 @@ var server = ws.createServer(property, function (conn) {
         var deviceType = msg['DeviceType'];
         var updateSource = msg['UpdateSource'];
         // need to update database according to deviceID
+        var deviceID;
+        serverDB = new sqlite3.Database(serverDBPath);
+        serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
+            deviceID = row.DeviceID;
+            serverDB.serialize(function() {
+                var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, UpdateSource = ? WHERE DeviceID = ?");
+                stmt.run(deviceName, deviceType, updateSource, deviceID);
+                stmt.finalize();
+                serverDB.close();
+            });
+        });
       } else {
         console.log("Unknown message" + str);
       }
     });
-    // should use device ID as key
+
+    var deviceID;
+    serverDB = new sqlite3.Database(serverDBPath);
+    serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
+        deviceID = row.DeviceID;
+        connMap[deviceID] = conn;
+    });
+
     connMap['Lehao'] = conn;
     console.log(connMap);
 }).listen(9000);
@@ -109,6 +128,7 @@ serverDB.serialize(function() {
 
   serverDB.run('create table if not exists Device \
     (DeviceID integer primary key autoincrement, \
+    ConnectionID text, \
     DeviceName text, \
     DeviceState text, \
     Description text, \
