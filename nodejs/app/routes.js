@@ -449,6 +449,44 @@ module.exports = function(app, passport) {
         });
     });
 
+    app.post('/getAudio', isLoggedIn, function(req, res) {
+        console.log(POST /getAudio);
+        console.log('Query: ' + req);
+
+        var UserID = req.param('UserID');
+        var ContentType = req.param('ContentType');
+        var Source = req.param('Source');
+        var SourceUserName = req.param('SourceUserName');
+        var SourcePassword = req.param('SourcePassword');
+        var DeviceID = req.param('DeviceID');
+        var contentList = [];
+        jsonData = {
+            'type': 'getContent',
+            'source_user_name': source_user_name,
+            'source_password': source_password
+        };
+        connMap[DeviceID].send(JSON.stringify(jsonData));
+
+        serverDB = new sqlite3.Database(serverDBPath);        
+        serverDB.run(
+            'select ContentID, ContentName, ContentURL from ContentList where UserID = ?, ContentType = ?, Source = ?',
+            UserID, ContentType, Source,
+            function(err, rows) {
+                if (!err) {
+                    rows.forEach(function(row) {
+                        contentList.push({
+                            'ContentID': row.ContentID,
+                            'ContentName': row.ContentName,
+                            'URL': row.ContentURL
+                        });
+                    });
+                }
+                res.send(contentList);
+            }
+        );
+        serverDB.close();
+    });
+
     app.get('/profile', isLoggedIn, function(req, res) {
         serverDB = new sqlite3.Database(serverDBPath);
         var userID;
@@ -764,6 +802,7 @@ module.exports = function(app, passport) {
             );
         }
  });
+
     app.get('/stateUpdate', function(req, res) {
         console.log('GET /stateUpdate');
 
@@ -776,18 +815,18 @@ module.exports = function(app, passport) {
         {
          console.log("Its wrong Query");
          res.json({"error":"Wrong Query."});
-        }else{
-         console.log('req received');
-         db = new sqlite3.Database(conn_str);
-         db.get('SELECT serv_state,errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
-            db.close();
-            if (!row){res.json({"state": "No record found.","state_num":"0"});}
-            else if(row.errorCode) { res.json({"state":error_info[parseInt(row.errorCode)], "state_num":"0"}); console.log(row.errorCode) }
-            else if(parseInt(row.serv_state) == parseInt(state)) {res.json({"state":""});}
-            else {res.json({"state": state_array[parseInt(row.serv_state)], "state_num": row.serv_state});}
-        });
-     }
- });
+         }else{
+             console.log('req received');
+             db = new sqlite3.Database(conn_str);
+             db.get('SELECT serv_state,errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
+                db.close();
+                if (!row){res.json({"state": "No record found.","state_num":"0"});}
+                else if(row.errorCode) { res.json({"state":error_info[parseInt(row.errorCode)], "state_num":"0"}); console.log(row.errorCode) }
+                else if(parseInt(row.serv_state) == parseInt(state)) {res.json({"state":""});}
+                else {res.json({"state": state_array[parseInt(row.serv_state)], "state_num": row.serv_state});}
+            });
+        }
+    });
 
     app.get('/deleteDevice', function(req, res) {
         console.log('GET /deleteDevice');
