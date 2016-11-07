@@ -513,8 +513,8 @@ module.exports = function(app, passport) {
 
         serverDB = new sqlite3.Database(serverDBPath);        
         // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
-        serverDB.all(
-            'select ContentID, ContentName, ContentURL from ContentList where UserID = ?, ContentType = ?, Source = ?',
+        // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+        serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
             UserID, ContentType, Source,
             function(err, rows) {
                 console.log('/getAudio return values: ' + rows);
