@@ -86,20 +86,35 @@ var server = ws.createServer(property, function (conn) {
             console.log(msg);
 
             serverDB = new sqlite3.Database(serverDBPath);
+            console.log('initialize serverDB');
             var contentList = msg['ContentList'];
             var deviceID;
             var userID;
+            console.log('ready to run server');
             serverDB.get('select DeviceID, UserID from Device where ConnectionID = ?', connectionID, function(err, row) {
+                console.log('serverDB Error: ' + err);
                 deviceID = row.DeviceID;
                 userID = row.UserID;
-                serverDB.serialize(function() {
-                    var stmt = serverDB.prepare('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
-                        values(?, ?, ?, ?, ?)');
-                    for (index in contentList) {
-                        var content = contentList[index];
-                        stmt.run(content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID);
-                    }
-                })
+
+                // serverDB.serialize(function() {
+                //     var stmt = serverDB.prepare('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
+                //         values(?, ?, ?, ?, ?)');
+                //     for (index in contentList) {
+                //         var content = contentList[index];
+                //         stmt.run(content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID);
+                //     }
+                //     stmt.finalize();
+                // })
+
+                for (index in contentList) {
+                    var content = contentList[index];
+                    serverDB.run('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
+                        values(?, ?, ?, ?, ?)',
+                        content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID,
+                        function(err, row){
+
+                    });
+                }
             });
             serverDB.close();
         } else {

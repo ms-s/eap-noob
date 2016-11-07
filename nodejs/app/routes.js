@@ -257,7 +257,7 @@ module.exports = function(app, passport) {
 
                     serverDB.all('select UserID from User where UserName = ?', req.user.username, function(err, userRows) {
                         userRows.forEach(function(row) {
-                            serverDB.get('insert into Device (DeviceID, DeviceName, DeviceState, Description, UserID, Image) \
+                            serverDB.run('insert into Device (DeviceID, DeviceName, DeviceState, Description, UserID, Image) \
                             values(?, ?, ?, ?, ?, ?)',
                             peer_id, 'Device Name', 'Device State', row.PeerInfo, row.UserID, 'Image',
                             function(err, row) {
@@ -492,7 +492,7 @@ module.exports = function(app, passport) {
         console.log('POST /getAudio');
         console.log('Query: ' + req);
 
-        var UserID = req.param('UserID');
+        var UserID = parseInt(req.param('UserID'));
         var ContentType = req.param('ContentType');
         var Source = req.param('Source');
         var SourceUserName = req.param('SourceUserName');
@@ -506,28 +506,58 @@ module.exports = function(app, passport) {
         };
         console.log('DeviceID: ' + DeviceID);
         console.log('==================== MAP =============');
-        console.log(connMap);
+        // console.log(connMap);
+        console.log('LOG: ' + UserID + ' ' + ContentType + ' ' + Source);
         console.log('======================================');
         connMap[DeviceID].send(JSON.stringify(jsonData));
 
-        serverDB = new sqlite3.Database(serverDBPath);        
-        serverDB.run(
-            'select ContentID, ContentName, ContentURL from ContentList where UserID = ?, ContentType = ?, Source = ?',
-            UserID, ContentType, Source,
-            function(err, rows) {
-                if (!err) {
-                    rows.forEach(function(row) {
-                        contentList.push({
-                            'ContentID': row.ContentID,
-                            'ContentName': row.ContentName,
-                            'URL': row.ContentURL
+        // wait for 500ms
+        setTimeout(function() {
+            serverDB = new sqlite3.Database(serverDBPath);        
+            // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
+            // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+            serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
+                UserID, ContentType, Source,
+                function(err, rows) {
+                    console.log('/getAudio return values: ' + rows);
+                    if (!err) {
+                        rows.forEach(function(row) {
+                            contentList.push({
+                                'ContentID': row.ContentID,
+                                'ContentName': row.ContentName,
+                                'URL': row.ContentURL
+                            });
                         });
-                    });
+                    } else {
+                        console.log('Error: ' + err);
+                    }
+                    res.send(contentList);
                 }
-                res.send(contentList);
-            }
-        );
-        serverDB.close();
+            );
+            serverDB.close();
+        }, 500);
+        // serverDB = new sqlite3.Database(serverDBPath);        
+        // // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
+        // // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+        // serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
+        //     UserID, ContentType, Source,
+        //     function(err, rows) {
+        //         console.log('/getAudio return values: ' + rows);
+        //         if (!err) {
+        //             rows.forEach(function(row) {
+        //                 contentList.push({
+        //                     'ContentID': row.ContentID,
+        //                     'ContentName': row.ContentName,
+        //                     'URL': row.ContentURL
+        //                 });
+        //             });
+        //         } else {
+        //             console.log('Error: ' + err);
+        //         }
+        //         res.send(contentList);
+        //     }
+        // );
+        // serverDB.close();
     });
 
     app.get('/profile', isLoggedIn, function(req, res) {
