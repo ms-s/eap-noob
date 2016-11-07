@@ -195,7 +195,7 @@
 
         if (ContentList.length > 0) {
             videoname = ContentList[0]['ContentName'];
-            videourl = ContentList[0]['VideoURL'];
+            videourl = ContentList[0]['URL'];
         }
 
         for (i = 0; i < ContentList.length; i++) {
@@ -206,11 +206,11 @@
                 if (isPrevious) {
                     num = (i + ContentList.length - 1) % ContentList.length;
                     videoname = ContentList[num]['ContentName'];
-                    videourl = ContentList[num]['VideoURL'];
+                    videourl = ContentList[num]['URL'];
                 } else {
                     num = (i + 1) % ContentList.length;
                     videoname = ContentList[num]['ContentName'];
-                    videourl = ContentList[num]['VideoURL'];
+                    videourl = ContentList[num]['URL'];
                 }
             }
         }
