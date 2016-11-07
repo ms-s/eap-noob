@@ -257,7 +257,7 @@ module.exports = function(app, passport) {
 
                     serverDB.all('select UserID from User where UserName = ?', req.user.username, function(err, userRows) {
                         userRows.forEach(function(row) {
-                            serverDB.get('insert into Device (DeviceID, DeviceName, DeviceState, Description, UserID, Image) \
+                            serverDB.run('insert into Device (DeviceID, DeviceName, DeviceState, Description, UserID, Image) \
                             values(?, ?, ?, ?, ?, ?)',
                             peer_id, 'Device Name', 'Device State', row.PeerInfo, row.UserID, 'Image',
                             function(err, row) {
