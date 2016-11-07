@@ -488,7 +488,7 @@ module.exports = function(app, passport) {
         });
     });
 
-    app.post('/getAudio', isLoggedIn, function(req, res) {
+    app.get('/getAudio', function(req, res) {
         console.log(POST /getAudio);
         console.log('Query: ' + req);
 
