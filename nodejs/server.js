@@ -63,8 +63,12 @@ var server = ws.createServer(property, function (conn) {
 
     // parse received text
     conn.on('text', function(str) {
+        console.log('websocket on text');
         msg = JSON.parse(str);
         if (msg['Type'] == 'Metadata') {
+            console.log('Type == Metadata');
+            console.log(msg);
+
             var deviceName = msg['DeviceName'];
             var deviceType = msg['DeviceType'];
             var updateSource = msg['UpdateSource'];
@@ -80,7 +84,10 @@ var server = ws.createServer(property, function (conn) {
                     serverDB.close();
                 });
             });
-        } else if (msg['Type'] == '') {
+        } else if (msg['Type'] == 'ContentList') {
+            console.log('Type == ContentList');
+            console.log(msg);
+
             serverDB = new sqlite3.Database(serverDBPath);
             var contentList = msg['ContentList'];
             var deviceID;
@@ -114,7 +121,7 @@ var server = ws.createServer(property, function (conn) {
     });
 
     connMap['Lehao'] = conn;
-    console.log(connMap);
+    // console.log(connMap);
 }).listen(9000);
 
 // set up our express application
