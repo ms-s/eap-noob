@@ -74,18 +74,17 @@
                             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Spotify_logo_with_text.svg/500px-Spotify_logo_with_text.svg.png"
                                  height="100%" border="0" alt="" style="padding:10px;">
                         </button>
-                        <ul class="demo-list-three mdl-list">
-                            <li class="mdl-list__item mdl-list__item--three-line">
+                        <ul class="mdl-list" id="controlPad">
+                            <li class="mdl-list__item" id="nowPlaying">NOW PLAYING: </li>
+                            <li class="mdl-list__item">
                                 <div style="margin-left:auto; margin-right:auto">
-                                    <button class="mdl-button mdl-js-button mdl-button--icon" disabled>
+                                    <button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, true)" id="skipPrevious" disabled>
                                         <i class="material-icons">skip_previous</i>
                                     </button>
-                                    <button id="play-button" class="mdl-button mdl-js-button mdl-button--icon"
-                                            onclick="playAudio(this, false)" disabled>
+                                    <button id="play-button" class="mdl-button mdl-js-button mdl-button--icon" onclick="playAudio(this, false)" disabled>
                                         <i class="material-icons">play_arrow</i>
                                     </button>
-                                    </button>
-                                    <button class="mdl-button mdl-js-button mdl-button--icon" disabled>
+                                    <button class="mdl-button mdl-js-button mdl-button--icon" id="skipNext" onclick="skip(this, false)" disabled>
                                         <i class="material-icons">skip_next</i>
                                     </button>
                                 </div>
@@ -96,9 +95,8 @@
                                 </div>
                             </li>
                             <li>
-                                <input class="mdl-slider mdl-js-slider" type="range"
-                                       min="0" max="20" value="0" tabindex="0" id="volumeSlider"
-                                       oninput="clickSlider(this.value)" disabled>
+                                <input class="mdl-slider mdl-js-slider" type="range" min="0" max="20" value="0"
+                                       tabindex="0" id="volumeSlider" oninput="clickSlider(this.value)" disabled>
                             </li>
                         </ul>
                         <ul class="mdl-list" id="audioContents">
@@ -113,6 +111,8 @@
 </div>
 </body>
 <script>
+    var videourlnow = ""
+    var videonamenow = ""
     var dialog = document.querySelector('dialog');
     var showDialogButton = document.querySelector('#show-dialog');
     if (! dialog.showModal) {
@@ -145,6 +145,8 @@
 
                 dialog.close();
 
+                console.log(this.responseText);
+
                 if (ContentList.length > 0) {
                     ContentList.forEach(function(audio) {
                         txt += "<li class='mdl-list__item mdl-list__item--three-line'>";
@@ -161,7 +163,7 @@
                 }
 
                 showControlPad();
-                document.getElementById("videoContents").innerHTML = txt;
+                document.getElementById("audioContents").innerHTML = txt;
             }
         };
         xhttp.open("GET", url, true)
@@ -184,6 +186,46 @@
         xhttp.send()
     }
 
+    function skip(buttion, isPrevious) {
+        <%var num = 0;%>
+        var videoname = "";
+        var videourl = "";
+
+        <%if (ContentList.length > 0) {%>
+            videoname = "<%=ContentList[0]['ContentName']%>";
+            videourl = "<%=ContentList[0]['VideoURL']%>";
+        <%}%>
+
+        <%for (i = 0; i < ContentList.length; i++) { %>
+
+            if ("<%=ContentList[i]['ContentName']%>" === videonamenow) {
+                <%console.log(i);%>
+
+                if (isPrevious) {
+                    <%num = (i + ContentList.length - 1) % ContentList.length;%>
+                    videoname = "<%=ContentList[num]['ContentName']%>";
+                    videourl = "<%=ContentList[num]['VideoURL']%>";
+                } else {
+                    <%num = (i + 1) % ContentList.length;%>
+                    videoname = "<%=ContentList[num]['ContentName']%>";
+                    videourl = "<%=ContentList[num]['VideoURL']%>";
+                }
+            }
+        <%}%>
+
+        videonamenow = videoname;
+        videourlnow = videourl;
+
+        console.log("video now = " + videonamenow)
+
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL="
+                + videourlnow + "&source=youtube&action=" + action;
+        xhttp.open("POST", url, true)
+        xhttp.send()
+    }
+
+
     function gotoAddDevice() {
         //window.location = "/addDevice";
     }
@@ -192,8 +234,6 @@
         window.location = "/logout";
     }
 
-    var videourlnow = ""
-    var videonamenow = ""
     function playAudio(button, bylist) {
         var action = "play"
 
