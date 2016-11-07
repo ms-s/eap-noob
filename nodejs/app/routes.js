@@ -511,28 +511,53 @@ module.exports = function(app, passport) {
         console.log('======================================');
         connMap[DeviceID].send(JSON.stringify(jsonData));
 
-        serverDB = new sqlite3.Database(serverDBPath);        
-        // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
-        // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
-        serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
-            UserID, ContentType, Source,
-            function(err, rows) {
-                console.log('/getAudio return values: ' + rows);
-                if (!err) {
-                    rows.forEach(function(row) {
-                        contentList.push({
-                            'ContentID': row.ContentID,
-                            'ContentName': row.ContentName,
-                            'URL': row.ContentURL
+        // wait for 500ms
+        setTimeout(function() {
+            serverDB = new sqlite3.Database(serverDBPath);        
+            // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
+            // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+            serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
+                UserID, ContentType, Source,
+                function(err, rows) {
+                    console.log('/getAudio return values: ' + rows);
+                    if (!err) {
+                        rows.forEach(function(row) {
+                            contentList.push({
+                                'ContentID': row.ContentID,
+                                'ContentName': row.ContentName,
+                                'URL': row.ContentURL
+                            });
                         });
-                    });
-                } else {
-                    console.log('Error: ' + err);
+                    } else {
+                        console.log('Error: ' + err);
+                    }
+                    res.send(contentList);
                 }
-                res.send(contentList);
-            }
-        );
-        serverDB.close();
+            );
+            serverDB.close();
+        }, 500);
+        // serverDB = new sqlite3.Database(serverDBPath);        
+        // // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
+        // // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+        // serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
+        //     UserID, ContentType, Source,
+        //     function(err, rows) {
+        //         console.log('/getAudio return values: ' + rows);
+        //         if (!err) {
+        //             rows.forEach(function(row) {
+        //                 contentList.push({
+        //                     'ContentID': row.ContentID,
+        //                     'ContentName': row.ContentName,
+        //                     'URL': row.ContentURL
+        //                 });
+        //             });
+        //         } else {
+        //             console.log('Error: ' + err);
+        //         }
+        //         res.send(contentList);
+        //     }
+        // );
+        // serverDB.close();
     });
 
     app.get('/profile', isLoggedIn, function(req, res) {
