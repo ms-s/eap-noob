@@ -124,6 +124,8 @@
     </header>
 
     <main class="mdl-layout__content">
+        <!--<button id="demo-show-toast" class="mdl-button mdl-js-button mdl-button--raised" type="button"
+                onclick="testShowSucceed()">Show Toast</button>-->
 
         <div class="page-content">
             <div class="mdl-grid" id="notifications">
@@ -198,6 +200,11 @@
         </div>
 
     </main>
+
+    <div id="demo-toast-example" class="mdl-js-snackbar mdl-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button"></button>
+    </div>
 
     <% include ./footer-home.ejs %>
 </div>
@@ -281,6 +288,10 @@
             child.parentNode.removeChild(child)
         }
 
+        if (action === "agree") {
+            var fakeInterval = setInterval(showSucceed, 5000);
+        }
+
         var xhttp = new XMLHttpRequest();
         var url = "/notification?notification=" + notificationID + "&Action=" + action + "&Type=" + type
         console.log("Send URL: " + url)
@@ -290,6 +301,22 @@
             xhttp.open("GET", url, true)
             xhttp.send()
         }
+    }
+
+    var fakeInterval;
+
+    function testShowSucceed() {
+        fakeInterval = setInterval(showSucceed, 5000);
+    }
+
+    function showSucceed() {
+        console.log("show succeed...");
+
+        var snackbarContainer = document.querySelector('#demo-toast-example');
+        var data = {message: 'Update Succeed'};
+        snackbarContainer.MaterialSnackbar.showSnackbar(data);
+
+        clearInterval(fakeInterval);
     }
 
     function gotoDevice(deviceID) {
