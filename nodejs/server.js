@@ -78,7 +78,7 @@ var server = ws.createServer(property, function (conn) {
             serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
                 deviceID = row.DeviceID;
                 serverDB.serialize(function() {
-                    var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, UpdateSource = ? WHERE DeviceID = ?");
+                    var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, SoftwareUpdateURL = ? WHERE DeviceID = ?");
                     stmt.run(deviceName, deviceType, updateSource, deviceID);
                     stmt.finalize();
                     serverDB.close();
