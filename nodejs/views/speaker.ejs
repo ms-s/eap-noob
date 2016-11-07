@@ -189,10 +189,10 @@
         var videoname = "";
         var videourl = "";
 
-        if (ContentList.length > 0) {
+        <%if (ContentList.length > 0) {%>
             videoname = "<%=ContentList[0]['ContentName']%>";
             videourl = "<%=ContentList[0]['VideoURL']%>";
-        }
+        <%}%>
 
         <%for (i = 0; i < ContentList.length; i++) { %>
 
