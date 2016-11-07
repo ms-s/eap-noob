@@ -492,7 +492,7 @@ module.exports = function(app, passport) {
         console.log('POST /getAudio');
         console.log('Query: ' + req);
 
-        var UserID = req.param('UserID');
+        var UserID = parseInt(req.param('UserID'));
         var ContentType = req.param('ContentType');
         var Source = req.param('Source');
         var SourceUserName = req.param('SourceUserName');
@@ -515,6 +515,7 @@ module.exports = function(app, passport) {
             'select ContentID, ContentName, ContentURL from ContentList where UserID = ?, ContentType = ?, Source = ?',
             UserID, ContentType, Source,
             function(err, rows) {
+                console.log('/getAudio return values: ' + rows);
                 if (!err) {
                     rows.forEach(function(row) {
                         contentList.push({
@@ -523,6 +524,8 @@ module.exports = function(app, passport) {
                             'URL': row.ContentURL
                         });
                     });
+                } else {
+                    console.log('Error: ' + err);
                 }
                 res.send(contentList);
             }
