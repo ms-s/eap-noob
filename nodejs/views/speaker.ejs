@@ -114,6 +114,7 @@
     var videourlnow = ""
     var videonamenow = ""
     var ContentList = []
+    var action="pause" //pause/play
     var dialog = document.querySelector('dialog');
     var showDialogButton = document.querySelector('#show-dialog');
     if (! dialog.showModal) {
@@ -236,7 +237,7 @@
     }
 
     function playAudio(button, bylist) {
-        var action = "play"
+        action = "play"
 
         if (!bylist) {
             if (document.getElementById("play-button").innerHTML.indexOf("pause") >= 0) {
