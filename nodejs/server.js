@@ -99,20 +99,25 @@ var server = ws.createServer(property, function (conn) {
                 deviceID = row.DeviceID;
                 userID = row.UserID;
 
-                serverDB.serialize(function() {
-                    var stmt = serverDB.prepare('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
-                        values(?, ?, ?, ?, ?)');
-                    for (index in contentList) {
-                        var content = contentList[index];
-                        stmt.run(content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID);
-                    }
-                    stmt.finalize();
-                })
+                // serverDB.serialize(function() {
+                //     var stmt = serverDB.prepare('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
+                //         values(?, ?, ?, ?, ?)');
+                //     for (index in contentList) {
+                //         var content = contentList[index];
+                //         stmt.run(content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID);
+                //     }
+                //     stmt.finalize();
+                // })
 
-                // for (index in contentList) {
-                //     var content = contentList[index];
-                //     serverDB.run()
-                // }
+                for (index in contentList) {
+                    var content = contentList[index];
+                    serverDB.run('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
+                        values(?, ?, ?, ?, ?)',
+                        content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID,
+                        function(err, row){
+
+                    });
+                }
             });
             serverDB.close();
         } else {
