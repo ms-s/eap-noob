@@ -111,7 +111,7 @@ var server = ws.createServer(property, function (conn) {
     });
 
     connMap['Lehao'] = conn;
-    console.log(connMap);
+    // console.log(connMap);
 }).listen(9000);
 
 // set up our express application
