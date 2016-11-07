@@ -506,12 +506,14 @@ module.exports = function(app, passport) {
         };
         console.log('DeviceID: ' + DeviceID);
         console.log('==================== MAP =============');
-        console.log(connMap);
+        // console.log(connMap);
+        console.log('LOG: ' + UserID + ' ' + ContentType + ' ' + Source);
         console.log('======================================');
         connMap[DeviceID].send(JSON.stringify(jsonData));
 
         serverDB = new sqlite3.Database(serverDBPath);        
-        serverDB.run(
+        // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
+        serverDB.all(
             'select ContentID, ContentName, ContentURL from ContentList where UserID = ?, ContentType = ?, Source = ?',
             UserID, ContentType, Source,
             function(err, rows) {
