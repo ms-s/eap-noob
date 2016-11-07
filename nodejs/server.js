@@ -96,15 +96,11 @@ var server = ws.createServer(property, function (conn) {
                 deviceID = row.DeviceID;
                 userID = row.UserID;
                 serverDB.serialize(function() {
-                    console.log('serialize');
                     var stmt = serverDB.prepare('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
                         values(?, ?, ?, ?, ?)');
-                    console.log('BANG');
                     for (index in contentList) {
-                        console.log('BANG');
                         var content = contentList[index];
                         stmt.run(content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID);
-                        console.log('HAHAHAHAHA');
                     }
                 })
             });
