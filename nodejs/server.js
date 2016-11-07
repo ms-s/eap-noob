@@ -220,7 +220,8 @@ app.post('/control', function(req, res) {
     var softwareName = 'Text File';
     var softwareList = [];
 
-    var content = base64_encode('file.txt');
+    // var content = base64_encode('file.txt');
+    var content;
 
     var jsonData = {
         'type': contentType,
@@ -235,8 +236,8 @@ app.post('/control', function(req, res) {
     console.log('Ready to send control json');
     console.log(jsonData);
 
-    // connMap[deviceID].send(JSON.stringify(jsonData));
-    connMap['Lehao'].send(JSON.stringify(jsonData));
+    connMap[deviceID].send(JSON.stringify(jsonData));
+    // connMap['Lehao'].send(JSON.stringify(jsonData));
     res.json({'status': 'success'});
 });
 
