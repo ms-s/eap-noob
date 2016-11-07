@@ -762,9 +762,11 @@ module.exports = function(app, passport) {
 
         if(len != 3 || peer_id == undefined || noob == undefined || hoob == undefined)
         {
+            console.log('CASE I');
             req.flash('profileMessage','Wrong query String! Please try again with proper Query!!' );
             res.redirect('/profile');
         }else if(noob.length != 22 || hoob.length != 22){
+            console.log('CASE II');
 
             console.log("Updating Error!!!" + peer_id);
             db = new sqlite3.Database(conn_str);
@@ -780,24 +782,29 @@ module.exports = function(app, passport) {
             res.redirect('/profile');
 
         }else{
+            console.log('CASE III, correct');
             // correct information
             db = new sqlite3.Database(conn_str);
             db.serialize(function() {
                 var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
                 stmt.run(1234,noob,hoob,req.user.username,2,peer_id);
                 stmt.finalize();
-                db.close();
             });
+            db.close();
+            req.flash('profileMessage','Received Successfully');
+            res.redirect('/profile');
 
+            console.log('prepare to add uninitialized device into database')
             serverDB = new sqlite3.Database(serverDBPath);
             serverDB.run(
-                'insert into Device (ConnectionID) \
-                values(?)',
-                peer_id,
+                'insert into Device (ConnectionID, UserID) \
+                values(?, ?)',
+                peer_id, 1,
                 function(err, row) {
+                    if (err) {
+                        console.log('ERROR: ' + err);
+                    }
                     serverDB.close();
-                    req.flash('profileMessage','Received Successfully');
-                    res.redirect('/profile');
                 }
             );
         }

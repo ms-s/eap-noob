@@ -55,13 +55,17 @@ var server = ws.createServer(property, function (conn) {
     // should use database here
     var connectionID = conn.path.substring(1);
     conn.on('close', function (code, reason) {
-        console.log("Connection closed")
+        console.log("Connection closed");
     });
 
     // parse received text
     conn.on('text', function(str) {
+        console.log('websocket on text');
         msg = JSON.parse(str);
         if (msg['Type'] == 'Metadata') {
+            console.log('Type == Metadata');
+            console.log(msg);
+
             var deviceName = msg['DeviceName'];
             var deviceType = msg['DeviceType'];
             var updateSource = msg['UpdateSource'];
@@ -71,13 +75,16 @@ var server = ws.createServer(property, function (conn) {
             serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
                 deviceID = row.DeviceID;
                 serverDB.serialize(function() {
-                    var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, UpdateSource = ? WHERE DeviceID = ?");
+                    var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, SoftwareUpdateURL = ? WHERE DeviceID = ?");
                     stmt.run(deviceName, deviceType, updateSource, deviceID);
                     stmt.finalize();
                     serverDB.close();
                 });
             });
-        } else if (msg['Type'] == '') {
+        } else if (msg['Type'] == 'ContentList') {
+            console.log('Type == ContentList');
+            console.log(msg);
+
             serverDB = new sqlite3.Database(serverDBPath);
             var contentList = msg['ContentList'];
             var deviceID;
@@ -103,12 +110,15 @@ var server = ws.createServer(property, function (conn) {
     var deviceID;
     serverDB = new sqlite3.Database(serverDBPath);
     serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
-        deviceID = row.DeviceID;
-        connMap[deviceID] = conn;
+        if (!err) {
+            if (deviceID != undefined) {
+                connMap[deviceID] = conn;
+            }
+        }
     });
 
     connMap['Lehao'] = conn;
-    console.log(connMap);
+    // console.log(connMap);
 }).listen(9000);
 
 // set up our express application
