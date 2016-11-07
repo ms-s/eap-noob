@@ -95,7 +95,7 @@ var server = ws.createServer(property, function (conn) {
             var userID;
             console.log('ready to run server');
             serverDB.get('select DeviceID, UserID from Device where ConnectionID = ?', connectionID, function(err, row) {
-                console('serverDB Error: ' + err);
+                console.log('serverDB Error: ' + err);
                 deviceID = row.DeviceID;
                 userID = row.UserID;
 
