@@ -501,8 +501,8 @@ module.exports = function(app, passport) {
         var contentList = [];
         jsonData = {
             'type': 'getContent',
-            'source_user_name': source_user_name,
-            'source_password': source_password
+            'source_user_name': SourceUserName,
+            'source_password': SourcePassword
         };
         connMap[DeviceID].send(JSON.stringify(jsonData));
 
