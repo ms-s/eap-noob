@@ -489,7 +489,7 @@ module.exports = function(app, passport) {
     });
 
     app.get('/getAudio', function(req, res) {
-        console.log(POST /getAudio);
+        console.log('POST /getAudio');
         console.log('Query: ' + req);
 
         var UserID = req.param('UserID');
