@@ -519,7 +519,7 @@ module.exports = function(app, passport) {
             serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
                 UserID, ContentType, Source,
                 function(err, rows) {
-                    console.log('/getAudio return values: ' + rows);
+                    // console.log('/getAudio return values: ' + rows);
                     if (!err) {
                         rows.forEach(function(row) {
                             contentList.push({
