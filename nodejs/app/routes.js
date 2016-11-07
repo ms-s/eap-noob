@@ -504,6 +504,10 @@ module.exports = function(app, passport) {
             'source_user_name': SourceUserName,
             'source_password': SourcePassword
         };
+        console.log('DeviceID: ' + DeviceID);
+        console.log('==================== MAP =============');
+        console.log(connMap);
+        console.log('======================================');
         connMap[DeviceID].send(JSON.stringify(jsonData));
 
         serverDB = new sqlite3.Database(serverDBPath);        
