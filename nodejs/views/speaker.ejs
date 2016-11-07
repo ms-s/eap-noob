@@ -113,6 +113,7 @@
 <script>
     var videourlnow = ""
     var videonamenow = ""
+    var ContentList = []
     var dialog = document.querySelector('dialog');
     var showDialogButton = document.querySelector('#show-dialog');
     if (! dialog.showModal) {
@@ -141,7 +142,7 @@
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 var txt = "";
-                var ContentList = JSON.parse(this.responseText);
+                ContentList = JSON.parse(this.responseText);
 
                 dialog.close();
 
@@ -152,11 +153,11 @@
                         txt += "<li class='mdl-list__item mdl-list__item--three-line'>";
                         txt += "<span class='mdl-list__item-primary-content'>";
                         txt += "<span>" + audio['ContentName'].substr(0, 20) + "</span>";
-                        txt += "<span class='mdl-list__item-text-body'>" + audio['Description'].substr(0, 50) +
-                                "</span></span>";
+                        //txt += "<span class='mdl-list__item-text-body'>" + audio['Artist'].substr(0, 50) +
+                        //        "</span></span>";
                         txt += "<span class='mdl-list__item-secondary-content'> " +
                                 "<a class='mdl-list__item-secondary-action' value-name='" + audio['ContentName'] +
-                                "'value-url='" + audio['AudioURL'] + "' onclick='playAudio(this, true)'>";
+                                "'value-url='" + audio['URL'] + "' onclick='playAudio(this, true)'>";
                         txt += "<i class='material-icons'>keyboard_arrow_right</i>";
                         txt += "</a></span></li>";
                     });
@@ -187,31 +188,31 @@
     }
 
     function skip(buttion, isPrevious) {
-        <%var num = 0;%>
+        var num = 0;
         var videoname = "";
         var videourl = "";
 
-        <%if (ContentList.length > 0) {%>
-            videoname = "<%=ContentList[0]['ContentName']%>";
-            videourl = "<%=ContentList[0]['VideoURL']%>";
-        <%}%>
+        if (ContentList.length > 0) {
+            videoname = ContentList[0]['ContentName'];
+            videourl = ContentList[0]['VideoURL'];
+        }
 
-        <%for (i = 0; i < ContentList.length; i++) { %>
+        for (i = 0; i < ContentList.length; i++) {
 
-            if ("<%=ContentList[i]['ContentName']%>" === videonamenow) {
-                <%console.log(i);%>
+            if (ContentList[i]['ContentName'] === videonamenow) {
+                console.log(i);
 
                 if (isPrevious) {
-                    <%num = (i + ContentList.length - 1) % ContentList.length;%>
-                    videoname = "<%=ContentList[num]['ContentName']%>";
-                    videourl = "<%=ContentList[num]['VideoURL']%>";
+                    num = (i + ContentList.length - 1) % ContentList.length;
+                    videoname = ContentList[num]['ContentName'];
+                    videourl = ContentList[num]['VideoURL'];
                 } else {
-                    <%num = (i + 1) % ContentList.length;%>
-                    videoname = "<%=ContentList[num]['ContentName']%>";
-                    videourl = "<%=ContentList[num]['VideoURL']%>";
+                    num = (i + 1) % ContentList.length;
+                    videoname = ContentList[num]['ContentName'];
+                    videourl = ContentList[num]['VideoURL'];
                 }
             }
-        <%}%>
+        }
 
         videonamenow = videoname;
         videourlnow = videourl;
