@@ -58,7 +58,7 @@ var server = ws.createServer(property, function (conn) {
     // should use database here
     var connectionID = conn.path.substring(1);
     conn.on('close', function (code, reason) {
-        console.log("Connection closed")
+        console.log("Connection closed");
     });
 
     // parse received text
@@ -106,8 +106,11 @@ var server = ws.createServer(property, function (conn) {
     var deviceID;
     serverDB = new sqlite3.Database(serverDBPath);
     serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
-        deviceID = row.DeviceID;
-        connMap[deviceID] = conn;
+        if (!err) {
+            if (deviceID != undefined) {
+                connMap[deviceID] = conn;
+            }
+        }
     });
 
     connMap['Lehao'] = conn;
