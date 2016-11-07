@@ -489,7 +489,7 @@ module.exports = function(app, passport) {
     });
 
     app.get('/getAudio', function(req, res) {
-        console.log(POST /getAudio);
+        console.log('POST /getAudio');
         console.log('Query: ' + req);
 
         var UserID = req.param('UserID');
@@ -497,13 +497,17 @@ module.exports = function(app, passport) {
         var Source = req.param('Source');
         var SourceUserName = req.param('SourceUserName');
         var SourcePassword = req.param('SourcePassword');
-        var DeviceID = req.param('DeviceID');
+        var DeviceID = parseInt(req.param('DeviceID'));
         var contentList = [];
         jsonData = {
             'type': 'getContent',
-            'source_user_name': source_user_name,
-            'source_password': source_password
+            'source_user_name': SourceUserName,
+            'source_password': SourcePassword
         };
+        console.log('DeviceID: ' + DeviceID);
+        console.log('==================== MAP =============');
+        console.log(connMap);
+        console.log('======================================');
         connMap[DeviceID].send(JSON.stringify(jsonData));
 
         serverDB = new sqlite3.Database(serverDBPath);        
