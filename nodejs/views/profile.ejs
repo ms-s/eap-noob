@@ -211,6 +211,7 @@
 
 <script>
     var checkUpdateTime = setInterval(checkUpdate, 60000);
+    var fakeInterval;
 
     function checkUpdate() {
         var xhttp = new XMLHttpRequest();
@@ -289,7 +290,9 @@
         }
 
         if (action === "agree") {
-            var fakeInterval = setInterval(showSucceed, 5000);
+            fakeInterval = setInterval(showSucceed, 5000);
+            var child = document.getElementById(notificationID);
+            child.parentNode.removeChild(child)
         }
 
         var xhttp = new XMLHttpRequest();
@@ -302,8 +305,6 @@
             xhttp.send()
         }
     }
-
-    var fakeInterval;
 
     function testShowSucceed() {
         fakeInterval = setInterval(showSucceed, 5000);
