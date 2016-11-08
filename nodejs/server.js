@@ -73,6 +73,9 @@ var server = ws.createServer(property, function (conn) {
             var deviceType = msg['DeviceType'];
             var updateSource = msg['UpdateSource'];
             var deviceDescription = msg['DeviceDescription'];
+            console.log('DeviceName: ' + deviceName);
+            console.log('DeviceDescription: ' + deviceDescription);
+
             // need to update database according to deviceID
             var deviceID;
             serverDB = new sqlite3.Database(serverDBPath);
