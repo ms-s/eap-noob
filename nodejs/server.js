@@ -72,14 +72,15 @@ var server = ws.createServer(property, function (conn) {
             var deviceName = msg['DeviceName'];
             var deviceType = msg['DeviceType'];
             var updateSource = msg['UpdateSource'];
+            var deviceDescription = msg['DeviceDescription'];
             // need to update database according to deviceID
             var deviceID;
             serverDB = new sqlite3.Database(serverDBPath);
             serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
                 deviceID = row.DeviceID;
                 serverDB.serialize(function() {
-                    var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, SoftwareUpdateURL = ? WHERE DeviceID = ?");
-                    stmt.run(deviceName, deviceType, updateSource, deviceID);
+                    var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, SoftwareUpdateURL = ?, Description = ? WHERE DeviceID = ?");
+                    stmt.run(deviceName, deviceType, updateSource, deviceDescription, deviceID);
                     stmt.finalize();
                     serverDB.close();
                 });
