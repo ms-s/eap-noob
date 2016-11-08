@@ -182,7 +182,7 @@
 
     function clickSlider(value) {
         var xhttp = new XMLHttpRequest();
-        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType==volume&URL="
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL="
                 + videourlnow + "&source=spotify&action=" + value;
         xhttp.open("POST", url, true)
         xhttp.send()
