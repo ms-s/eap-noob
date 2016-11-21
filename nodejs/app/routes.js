@@ -45,6 +45,7 @@ module.exports = function(app, passport) {
     // =====================================
     app.get('/', function(req, res) {
         console.log('GET /');
+        //res.render('qr_scanner.ejs');
 
         res.render('login.ejs', { message: req.flash('loginMessage')}); // load the index.ejs file
     });
@@ -843,7 +844,8 @@ module.exports = function(app, passport) {
     app.get('/addDevice',isLoggedIn, function(req, res) {
         console.log('GET /addDevice');
 
-        res.render('deviceAdd.ejs',{url : configDB.url});
+        res.render('qr_scanner.ejs');
+        //res.render('deviceAdd.ejs',{url : configDB.url});
     });
 
     // process the signup form
