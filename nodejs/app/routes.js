@@ -745,7 +745,7 @@ module.exports = function(app, passport) {
 
                             var content = base64_encode(softwareUpdateURL);
                             var jsonData = {
-                                'type': 'updata',
+                                'type': 'update',
                                 'action': undefined,
                                 'url': undefined,
                                 'source': undefined,
