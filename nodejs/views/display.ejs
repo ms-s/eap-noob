@@ -120,6 +120,16 @@
                         </button>
 
                         <ul class="mdl-list" id="controlPad">
+                            <li class="mdl-list__item">
+                                <div class="mdl-textfield mdl-js-textfield">
+                                    <input class="mdl-textfield__input" type="text" id="search" disabled>
+                                    <label class="mdl-textfield__label" for="search">Search Content</label>
+                                </div>
+                                <button class="mdl-button mdl-js-button mdl-button--icon" id="search-icon" onclick="search()" disabled>
+                                    <i class="material-icons">search</i>
+                                </button>
+                            </li>
+
                             <li class="mdl-list__item" id="nowPlaying">NOW PLAYING: </li>
                             <li class="mdl-list__item">
                                 <div style="margin-left:auto; margin-right:auto">
@@ -213,15 +223,7 @@
     }
 
     function getVideos(button) {
-        //var xhttp = new XMLHttpRequest();
-
         checkAuth();
-
-        // console.log(<%=UserID%>)
-        // var url = "/contentList?userID=<%=UserID%>&contentType=video&Source=YouTube&deviceID=<%=DeviceID%>"
-        //xhttp.open("POST", url, true)
-        //xhttp.send()
-        // window.location = url;
     }
 
     // The client ID is obtained from the {{ Google Cloud Console }}
@@ -296,6 +298,28 @@
         });
     }
 
+    function search() {
+        var q = $('#search').val();
+        console.log(q);
+        var request = gapi.client.youtube.search.list({
+            q: q,
+            part: 'snippet',
+            maxResults: 20
+        });
+//        var request = gapi.client.youtube.activities.list({
+//            part: 'snippet',
+//            maxResults: 20,
+//            home: true
+//        });
+
+        request.execute(function(response) {
+            var str = JSON.stringify(response.result);
+            console.log(str);
+            showContentList(response.result);
+        });
+    }
+
+
     function showContentList(jsonResult) {
         var jsonData = jsonResult;
         var items = jsonData['items'];
@@ -346,6 +370,8 @@
         document.getElementById("play-button").disabled = false;
         document.getElementById("skipNext").disabled = false;
         document.getElementById("volumeSlider").disabled = false;
+        document.getElementById("search").disabled = false;
+        document.getElementById("search-icon").disabled = false;
     }
 
     function skip(buttion, isPrevious) {
