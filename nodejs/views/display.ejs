@@ -177,14 +177,6 @@
         });
     }
 
-    function checkAuth() {
-        gapi.auth.authorize({
-            client_id: OAUTH2_CLIENT_ID,
-            scope: OAUTH2_SCOPES,
-            immediate: false
-        }, handleAuthResult);
-    }
-
     function clickSlider(value) {
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL="
@@ -382,6 +374,8 @@
         if (ContentList.length > 0) {
             videoname = ContentList[0]['ContentName'];
             videourl = ContentList[0]['VideoURL'];
+            console.log(videoname);
+            console.log(videourl);
         }
 
         for (i = 0; i < ContentList.length; i++) {
@@ -405,6 +399,8 @@
         videourlnow = videourl;
 
         console.log("video now = " + videonamenow)
+        console.log("video url = " + videourl)
+        console.log("video url = " + videourlnow)
 
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL="
