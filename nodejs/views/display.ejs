@@ -348,10 +348,14 @@
                 txt += "<span class='mdl-list__item-text-body'>" + video['Description'].substr(0, 50) +
                         "</span></span>";
                 txt += "<span class='mdl-list__item-secondary-content'> " +
-                        "<a class='mdl-list__item-secondary-action' value-name='" + video['ContentName'] +
-                        "'value-url='" + video['VideoURL'] + "' onclick='playVideo(this, true)'>";
+                        "<a class='mdl-list__item-secondary-action' value-name='" +
+                        video['ContentName'].replace('\'', '') +
+                        "'value-url='" + video['VideoURL'].replace('\'', '') + "' onclick='playVideo(this, true)'>";
                 txt += "<i class='material-icons'>keyboard_arrow_right</i>";
                 txt += "</a></span></li>";
+
+                console.log("video content name: " + video['ContentName']);
+                console.log("video url: " + video['VideoURL']);
             });
         }
 
@@ -443,6 +447,9 @@
                 action = "play"
             }
         }
+
+        console.log("video now = " + videonamenow);
+        console.log("video url = " + videourlnow);
 
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL="
