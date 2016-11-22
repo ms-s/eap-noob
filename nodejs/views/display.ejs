@@ -328,6 +328,7 @@
             var parts = imageUrl.split('/');
             var videoID = parts[4];
             videoUrl = 'https://www.youtube.com/watch?v=' + videoID;
+            console.log("parse: " + videoUrl);
             var json = {
                 'ContentName': contentName,
                 'Description': description,
