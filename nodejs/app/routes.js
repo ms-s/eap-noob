@@ -848,7 +848,7 @@ module.exports = function(app, passport) {
         var userID;
         var permission;
         var tmpParts;
-
+        var status = 2;
         var query = req._parsedUrl.query;
         var parts = query.split('&');
 
@@ -862,23 +862,34 @@ module.exports = function(app, passport) {
         // TODO multiple cases? e.g: duplicated insertion of users
         // first delete, then add?
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
+        serverDB.get('select * from User where UserName = ?', userName, function(err, row) {
             if (!err) {
-                userID = userRow.UserID;
-                serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
-                    serverDB.get('insert into AuthorizedUser (DeviceID, UserID, Permission) values (?, ?, ?)',
-                        deviceID, userID, permission, function(err) {
-                            if (!err) {
-
-                            } else {
-                                console.log('ERROR in insert in /addAuthUser: ' + err);
-                            }
-                        })
-                });
-            } else {
-                console.log('ERROR in delete in /addAuthUser: ' + err);
+                if (row != undefined) {
+                    erverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
+                        if (!err) {
+                            userID = userRow.UserID;
+                            serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
+                                serverDB.get('insert into AuthorizedUser (DeviceID, UserID, Permission) values (?, ?, ?)',
+                                    deviceID, userID, permission, function(err) {
+                                        if (!err) {
+                                            status = 0;
+                                        } else {
+                                            console.log('ERROR in insert in /addAuthUser: ' + err);
+                                        }
+                                    })
+                            });
+                        } else {
+                            console.log('ERROR in delete in /addAuthUser: ' + err);
+                        }
+                    });
+                } else {
+                    status = 1;
+                }
             }
         });
+        res.send(
+            {Status: status,
+            UserID: userID});
         serverDB.close();
     });
 
