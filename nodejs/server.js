@@ -49,18 +49,18 @@ var property = {
 };
 
 var server = ws.createServer(property, function (conn) {
+    console.log("==== WebSocket Connection ====");
     console.log("New connection requested to: " + conn.path);
     console.log(conn.path);
-    // simple userID, anything after '/'
-    // should use database here
+
     var connectionID = conn.path.substring(1);
     conn.on('close', function (code, reason) {
-        console.log("Connection closed");
+        console.log("WebSocket connection closed");
     });
 
     // parse received text
     conn.on('text', function(str) {
-        console.log('websocket on text');
+        console.log('WebSocket received text');
         msg = JSON.parse(str);
         if (msg['Type'] == 'Metadata') {
             console.log('Type == Metadata');
@@ -77,13 +77,17 @@ var server = ws.createServer(property, function (conn) {
             var deviceID;
             serverDB = new sqlite3.Database(serverDBPath);
             serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
-                deviceID = row.DeviceID;
-                serverDB.serialize(function() {
-                    var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, SoftwareUpdateURL = ?, Description = ? WHERE DeviceID = ?");
-                    stmt.run(deviceName, deviceType, updateSource, deviceDescription, deviceID);
-                    stmt.finalize();
-                    serverDB.close();
-                });
+                if (!err) {
+                    deviceID = row.DeviceID;
+                    serverDB.serialize(function() {
+                        var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, SoftwareUpdateURL = ?, Description = ? WHERE DeviceID = ?");
+                        stmt.run(deviceName, deviceType, updateSource, deviceDescription, deviceID);
+                        stmt.finalize();
+                        serverDB.close();
+                    });
+                } else {
+                    console.log('ERROR: Update device metadata in WebSocket; err: ' + err);
+                }
             });
         } else if (msg['Type'] == 'ContentList') {
             console.log('Type == ContentList');
@@ -96,46 +100,40 @@ var server = ws.createServer(property, function (conn) {
             var userID;
             console.log('ready to run server');
             serverDB.get('select DeviceID, UserID from Device where ConnectionID = ?', connectionID, function(err, row) {
-                console.log('serverDB Error: ' + err);
-                deviceID = row.DeviceID;
-                userID = row.UserID;
+                if (!err) {
+                    deviceID = row.DeviceID;
 
-                // serverDB.serialize(function() {
-                //     var stmt = serverDB.prepare('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
-                //         values(?, ?, ?, ?, ?)');
-                //     for (index in contentList) {
-                //         var content = contentList[index];
-                //         stmt.run(content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID);
-                //     }
-                //     stmt.finalize();
-                // })
+                    for (index in contentList) {
+                        var content = contentList[index];
+                        serverDB.run('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
+                            values(?, ?, ?, ?, ?)',
+                            content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID,
+                            function(err, row){
 
-                for (index in contentList) {
-                    var content = contentList[index];
-                    serverDB.run('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
-                        values(?, ?, ?, ?, ?)',
-                        content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID,
-                        function(err, row){
-
-                    });
+                        });
+                    }
+                } else {
+                    console.log('ERROR: Update ContentList in WebSocket');
                 }
             });
             serverDB.close();
         } else {
-            console.log("Unknown message" + str);
+            console.log("WebSocket received unknown message" + str);
         }
     });
 
     var deviceID;
     serverDB = new sqlite3.Database(serverDBPath);
     serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
-        console.log('ERROR: ' + err);
+        
         deviceID = row.DeviceID;
         console.log('DeviceID: ' + deviceID);
         if (!err) {
             if (deviceID != undefined) {
                 connMap[deviceID] = conn;
             }
+        } else {
+            console.log('ERROR: ' + err);
         }
     });
 
@@ -184,7 +182,6 @@ serverDB.serialize(function() {
     Description text, \
     DeviceType text, \
     SoftwareUpdateURL text, \
-    UserID integer, \
     Image text);');
 
   serverDB.run('create table if not exists Notification \
@@ -203,6 +200,11 @@ serverDB.serialize(function() {
     Source text, \
     UserID integer\
     );');
+
+  serverDB.run('create table if not exists AuthorizedUser \
+    (DeviceID integer primary key autoincrement, \
+    UserID integer, \
+    Permission integer);');
 
   serverDB.close();
 });
