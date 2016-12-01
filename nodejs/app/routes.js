@@ -822,6 +822,7 @@ module.exports = function(app, passport) {
     app.post('/revokeAuthUser', function(req, res) {
         var deviceID;
         var userID;
+        var tmpParts;
 
         var query = req._parsedUrl.query;
         var parts = query.split('&');
@@ -838,6 +839,46 @@ module.exports = function(app, passport) {
             }
         })
         serverDB.close();     
+    });
+
+    app.post('/addAuthUser', function(req, res) {
+        var deviceID;
+        var userName;
+        var userID;
+        var permission;
+        var tmpParts;
+
+        var query = req._parsedUrl.query;
+        var parts = query.split('&');
+
+        tmpParts = parts[0].split('=');
+        deviceID = parseInt(tmpParts[1]);
+        tmpParts = parts[1].split('=');
+        userName = tmpParts[1];
+        tmpParts = parts[2].split('=');
+        permission = parseInt(tmpParts[1]);
+
+        // TODO multiple cases? e.g: duplicated insertion of users
+        // first delete, then add?
+        serverDB = new sqlite3.Database(serverDBPath);
+        serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
+            if (!err) {
+                userID = userRow.UserID;
+                serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
+                    serverDB.get('insert into AuthorizedUser (DeviceID, UserID, Permission) values (?, ?, ?)',
+                        deviceID, userID, permission, function(err) {
+                            if (!err) {
+
+                            } else {
+                                console.log('ERROR in insert in /addAuthUser: ' + err);
+                            }
+                        })
+                });
+            } else {
+                console.log('ERROR in delete in /addAuthUser: ' + err);
+            }
+        });
+        serverDB.close();
     });
 
     // =====================================
