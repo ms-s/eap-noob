@@ -783,6 +783,42 @@ module.exports = function(app, passport) {
         });
     });
 
+    app.get('/authorizedUser', isLoggedIn, function(req, res) {
+        var parts = query.split('&');
+        var tmpParts;
+        
+        var deviceID;
+        var userID;
+
+        tmpParts = parts[0].split('=');
+        deviceID = parseInt(tmpParts[1]);
+        tmpParts = parts[1].split('=');
+        userID = parseInt(tmpParts[1]);
+
+        serverDB = new sqlite3.Database(serverDBPath);
+        userList = [];
+        serverDB.run('select U.UserID, U.UserName from User as U, AuthorizedUser as A\
+            where U.UserID = A.UserID and A.DeviceID = ?',
+            deviceID, function(err, rows) {
+                if (!err) {
+                    rows.forEach(function(row) {
+                        if (row.UserID != userID) {
+                            userList.push({
+                                UserID: row.UserID,
+                                UserName: row.UserName
+                            });
+                        }
+                    });
+                }
+                res.json({
+                    DeviceID: deviceID,
+                    Users: userList
+                });
+            }
+        );
+        serverDB.close();
+    });
+
     // =====================================
     // LOGOUT ==============================
     // =====================================
@@ -897,7 +933,7 @@ module.exports = function(app, passport) {
             })
             serverDB.close();
         }
- });
+    });
 
     app.get('/stateUpdate', function(req, res) {
         console.log('GET /stateUpdate');
