@@ -32,6 +32,7 @@
 ### Protocol Design: 
 ```
 {
+    "userID": userID,
     "type": "video" / "update" / "getContent",
     "action": "play",
     "url": "https://www.youtube.com/watch?v=iAmI1ExVqt4",
@@ -110,7 +111,7 @@ Notification (software, videolist update)
 	NotificationType
 	Description
 
-# Hardcode insert
+#### Hardcode insert
 ContentList
 	ContentID
 	UserID
@@ -124,8 +125,9 @@ AuthorizedUser
 	UserID
 	Permission // 0 - admin, 1 - user
 
-Action on views
+## Action on views
 
+```
 GET✅
 /profile
 return
@@ -135,15 +137,21 @@ return
 	NotificationList: [{int NotificationID, int DeviceID, string NotificationType, string Description}, ...],
 	Devices: [{int DeviceID, string DeviceName, string ImagePath, string Description}, ...]
 }
+```
 
 NotificationType: "VideoListUpdate"/"AudioListUpdate"/"SoftwareUpdate"
 
+```
 POST✅
 /profile?notification=[ID]&Action=(cancel: delete / detail: routing)&Type=[VideoListUpdate]/[AudioListUpdate]
+```
 
+```
 POST (Working transmit)
 /profile?notification=[ID]&Action=(cancel: delete / detail: routing / agree: transmit file)&Type=[SoftwareUpdate]
+```
 
+```
 GET✅
 /devices?userID=[]
 {
@@ -151,10 +159,11 @@ GET✅
 	UserName: string userName,
 	Devices: [[int DeviceID, string DeviceName, string DeviceState, string Description, string ImagePath], ...]
 }
-
+```
 
 DeviceState: "connected"/"disconnected"
 
+```
 GET✅
 /device?deviceID=[]&userID=[]
 {
@@ -168,7 +177,8 @@ GET✅
 	Permission: 0 - highest level
 }
 // render different ejs (speaker.ejs / display.ejs)
-
+```
+```
 GET✅
 /contentList?userID=[]&contentType=[Video/Audio]&Source=[YouTube]&deviceID=[]
 	content type
@@ -181,16 +191,20 @@ GET✅
 	Image: string image,
 	NotificationList: [{}, ...]
 	ContentList: [{ContentID, ContentName, URL}] // with specified source
+```
 
+```
 POST
 /control?userID=[]&deviceID=[]&contentType=[]&URL=[]&source=[]&action=[](volume: up/down; click play/resume: change; play: play, with URL)
+```
 
-
-
+```
 POST✅
 /checkUpdate?userID=[]
 Return list of all the notifications
+```
 
+```
 GET
 /authorizedUser?DeviceID=[]&UserID=[]
 {
@@ -201,16 +215,21 @@ GET
 		UserName: name
 	}, ...]
 }
+```
 
+```
 POST
 /revokeAuthUser?DeviceID=[]&UserID=[]
 	delete it in database
+```
 
+```
 POST
 /addAuthUser?DeviceID=[]&Username=[]&Permission=[]
 {
 	Status: 0 - Success, 1 - User Not Exists, 2 - Failure
 }
+```
 
 // Spotify autentication
 POST
@@ -231,6 +250,7 @@ Client to Server GetContent protocol (through websocket)
 ```
 {
 	"Type": 'ContentList',
+	'UserID': userID,
 	'ContentList': [{
 		'ContentName': name,
 		'ContentType': 'Audio',
