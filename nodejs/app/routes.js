@@ -518,6 +518,9 @@ module.exports = function(app, passport) {
         serverDB = new sqlite3.Database(serverDBPath);
         var userID;
         var userName = req.user.username;
+
+        console.log(req);
+
         console.log('GET /profile');
         console.log('userName: ' + userName);
 
@@ -866,22 +869,32 @@ module.exports = function(app, passport) {
             // TODO:
             // where to have the userID
             // how to get the PrimaryKey (DeviceID) of the newly inserted tuple?
-            serverDB.run(
-                'insert into Device (DeviceID, ConnectionID, UserID) \
-                values(?, ?, ?)',
-                common.GlobalDeviceID, peer_id, 1,
-                function(err, row) {
-                    if (err) {
-                        console.log('ERROR: ' + err);
-                    }
+
+            var userName = req.user.username;
+            var userID;
+            serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow){
+                if (!err) {
+                    userID = userRow.UserID;
+
                     serverDB.run(
-                        'insert into AuthorizedUser (DeviceID, UserID, Permission) \
+                        'insert into Device (DeviceID, ConnectionID, UserID) \
                         values(?, ?, ?)',
-                        common.GlobalDeviceID, 1, 0, function(err, row){
-                            common.GlobalDeviceID += 1;
-                        });
+                        common.GlobalDeviceID, peer_id, UserID,
+                        function(err, row) {
+                            if (err) {
+                                console.log('ERROR: ' + err);
+                            }
+                            serverDB.run(
+                                'insert into AuthorizedUser (DeviceID, UserID, Permission) \
+                                values(?, ?, ?)',
+                                common.GlobalDeviceID, UserID, 0, function(err, row){
+                                    common.GlobalDeviceID += 1;
+                                }
+                            );
+                        }
+                    );
                 }
-            );
+            })
             serverDB.close();
         }
  });
