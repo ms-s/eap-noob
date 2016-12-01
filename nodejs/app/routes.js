@@ -812,6 +812,7 @@ module.exports = function(app, passport) {
                 }
                 res.json({
                     DeviceID: deviceID,
+                    UserID: userID,
                     Users: userList
                 });
             }
