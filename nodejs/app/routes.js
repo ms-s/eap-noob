@@ -60,46 +60,46 @@ module.exports = function(app, passport) {
 });
 
     
-    app.get('/getDevices', isLoggedIn, function(req, res) {
-        console.log('GET /getDevices');
+    // app.get('/getDevices', isLoggedIn, function(req, res) {
+    //     console.log('GET /getDevices');
 
-        var device_info = req.query.DeviceInfo;
-        var queryObject = url.parse(req.url,true).query;
-        var len = Object.keys(queryObject).length;
+    //     var device_info = req.query.DeviceInfo;
+    //     var queryObject = url.parse(req.url,true).query;
+    //     var len = Object.keys(queryObject).length;
 
-        if(len != 1 || device_info == undefined)
-        {
-            console.log("Its wrong Query");
-            res.json({"error":"Wrong Query."});
-        }else{
-            var deviceDetails = new Array();
-            var i= 0;
-            var parseJson;
-            var devInfoParam = '%' + device_info + '%';
-            db = new sqlite3.Database(conn_str);
-            db.all('SELECT PeerID, PeerInfo FROM peers_connected where peerInfo LIKE ? AND serv_state = ? AND userName IS NULL', devInfoParam, 1, function(err,rows){ //check for error conditions too
-                db.close();
-                if(!err){
-                    rows.forEach(function(row) {
-                        deviceDetails[i] = new Object();
-                        deviceDetails[i].peer_id = row.PeerID;
-                        parseJson= JSON.parse(row.PeerInfo);
-                        deviceDetails[i].peer_name = parseJson['PeerName'];
-                        deviceDetails[i].peer_num = parseJson['PeerSNum'];
-                        deviceDetails[i].peer_ssid = parseJson['PeerSSID'];
-                        deviceDetails[i].peer_bssid = parseJson['PeerBSSID'];
+    //     if(len != 1 || device_info == undefined)
+    //     {
+    //         console.log("Its wrong Query");
+    //         res.json({"error":"Wrong Query."});
+    //     }else{
+    //         var deviceDetails = new Array();
+    //         var i= 0;
+    //         var parseJson;
+    //         var devInfoParam = '%' + device_info + '%';
+    //         db = new sqlite3.Database(conn_str);
+    //         db.all('SELECT PeerID, PeerInfo FROM peers_connected where peerInfo LIKE ? AND serv_state = ? AND userName IS NULL', devInfoParam, 1, function(err,rows){ //check for error conditions too
+    //             db.close();
+    //             if(!err){
+    //                 rows.forEach(function(row) {
+    //                     deviceDetails[i] = new Object();
+    //                     deviceDetails[i].peer_id = row.PeerID;
+    //                     parseJson= JSON.parse(row.PeerInfo);
+    //                     deviceDetails[i].peer_name = parseJson['PeerName'];
+    //                     deviceDetails[i].peer_num = parseJson['PeerSNum'];
+    //                     deviceDetails[i].peer_ssid = parseJson['PeerSSID'];
+    //                     deviceDetails[i].peer_bssid = parseJson['PeerBSSID'];
                         
-                        i++;
-                    });
-                    console.log(JSON.stringify(deviceDetails)); 
-                    res.send(JSON.stringify(deviceDetails));
-                }else{
-                    res.send(JSON.stringify(deviceDetails));
+    //                     i++;
+    //                 });
+    //                 console.log(JSON.stringify(deviceDetails)); 
+    //                 res.send(JSON.stringify(deviceDetails));
+    //             }else{
+    //                 res.send(JSON.stringify(deviceDetails));
                     
-                }
-            });
-        }
-    });
+    //             }
+    //         });
+    //     }
+    // });
 
     app.get('/devices', isLoggedIn, function(req, res) {
         var query = req._parsedUrl.query;
@@ -194,6 +194,7 @@ module.exports = function(app, passport) {
         var notificationList = [];
         var contentList = [];
         var deviceType = 'N/A';
+        var permission = -1;
 
         serverDB = new sqlite3.Database(serverDBPath);
         serverDB.get('select UserID, DeviceName, DeviceState, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
@@ -204,42 +205,52 @@ module.exports = function(app, passport) {
                 deviceType = deviceRow.DeviceType;
                 image = deviceRow.Image;
 
-                serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
+                serverDB.get('select Permission from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err, permissionRow){
                     if (!err) {
-                        notificationRows.forEach(function(row) {
-                            notificationList.push({
-                                NotificationID: row.NotificationID,
-                                NotificationType: row.NotificationType,
-                                Description: row.Description
-                            });
-                        });
-                    }
+                        permission = permissionRow.Permission;
 
-                    if (deviceType == 'Video') {
-                        res.render('display.ejs', {
-                            DeviceID: deviceID,
-                            UserID: userID,
-                            DeviceName: deviceName,
-                            DeviceState: deviceState,
-                            Description: description,
-                            Image: image,
-                            NotificationList: notificationList,
-                            ContentList: contentList
-                        });
-                    } else if (deviceType == 'Audio') {
-                        res.render('speaker.ejs', {
-                            DeviceID: deviceID,
-                            UserID: userID,
-                            DeviceName: deviceName,
-                            DeviceState: deviceState,
-                            Description: description,
-                            Image: image,
-                            NotificationList: notificationList,
-                            ContentList: contentList
+                        serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
+                            if (!err) {
+                                notificationRows.forEach(function(row) {
+                                    notificationList.push({
+                                        NotificationID: row.NotificationID,
+                                        NotificationType: row.NotificationType,
+                                        Description: row.Description
+                                    });
+                                });
+                            }
+
+                            if (deviceType == 'Video') {
+                                res.render('display.ejs', {
+                                    DeviceID: deviceID,
+                                    UserID: userID,
+                                    DeviceName: deviceName,
+                                    DeviceState: deviceState,
+                                    Description: description,
+                                    Image: image,
+                                    NotificationList: notificationList,
+                                    ContentList: contentList,
+                                    Permission: permission
+                                });
+                            } else if (deviceType == 'Audio') {
+                                res.render('speaker.ejs', {
+                                    DeviceID: deviceID,
+                                    UserID: userID,
+                                    DeviceName: deviceName,
+                                    DeviceState: deviceState,
+                                    Description: description,
+                                    Image: image,
+                                    NotificationList: notificationList,
+                                    ContentList: contentList,
+                                    Permission: permission
+                                });
+                            } else {
+                                console.log('Invalid DeviceType');
+                                res.send('Invalid DeviceType');
+                            }
                         });
                     } else {
-                        console.log('Invalid DeviceType');
-                        res.send('Invalid DeviceType');
+                        console.log('Error: Get permission in /device; error: ' + err);
                     }
                 });
             }
