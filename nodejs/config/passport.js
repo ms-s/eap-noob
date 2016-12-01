@@ -7,10 +7,10 @@ var bcrypt = require('bcrypt-nodejs');
 
 // load up the user model
 var db;
-
+var serverDB;
 var configDB = require('./database.js');
 var conn_str = configDB.dbPath;
-
+var serverDBPath = configDB.serverDBPath;
 
 function hashPassword(password) {
 	return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
@@ -99,6 +99,25 @@ process.nextTick(function() {
 
 	// find a user whose email is the same as the forms email
 	// we are checking to see if the user trying to login already exists
+	serverDB = new sqlite3.Database(serverDBPath);
+	serverDB.get('select UserID, UserName, Password from User where UserName = ?', email, function(err, row) {
+		if (err) {
+			return done(err);
+		}
+		if (!row) {
+			var stmt = serverDB.prepare('insert into User(UserName, Password) values(?, ?)');
+			stmt.run(email, hashPassword(password));
+			stmt.finalize();
+			// serverDB.get('select UserID, UserName, Password from User where UserName = ?', email, function(err, row) {
+			// 	if (!row) {
+			// 		return done(null, false);
+			// 	} else {
+			// 		return done(null, row);
+			// 	}
+			// });
+		}
+	});
+
 	db = new sqlite3.Database(conn_str);
 	db.get('SELECT id, username, password FROM users WHERE username = ?', email, function(err, row) {
 

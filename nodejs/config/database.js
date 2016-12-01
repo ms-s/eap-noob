@@ -2,7 +2,8 @@
 module.exports = {
 
     'ooblibPath' : '',
-    'dbPath' : '',
-    'url'    : ''
+    'dbPath' : '../../../peer_connection_db',
+    'serverDBPath' : '../../../serverDB',
+    'url'    : 'https://127.0.0.1:8080'
 
 };

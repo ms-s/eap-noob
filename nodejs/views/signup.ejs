@@ -3,45 +3,104 @@
 <html>
 <head>
     <title>Node Authentication</title>
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"> <!-- load bootstrap css -->
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css"> <!-- load fontawesome -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"> <!-- load bootstrap css -->
+    <!--<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css"> <!-- load fontawesome -->
+    <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+    <link href='https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="//storage.googleapis.com/code.getmdl.io/1.0.1/material.teal-red.min.css" />
+    <script src="//storage.googleapis.com/code.getmdl.io/1.0.1/material.min.js"></script>
     <style>
-        body        { padding-top:80px; }
+
+        div.mdl-layout__title {
+            padding-top: 40px;
+            text-align: center;
+        }
+        div.mdl-textfield {
+            margin: auto;
+        }
+        div.mdl-grid {
+            padding-bottom: 0px;
+            padding-top: 0px;
+        }
+        button.mdl-button {
+            margin: auto;
+            width: 300px;
+        }
+        span.message {
+            color: #F44336;
+        }
+        p {
+            margin: auto;
+        }
     </style>
 </head>
 <body>
-<div class="container">
 
-<div class="col-sm-6 col-sm-offset-3">
+<div class="mdl-layout mdl-js-layout">
+<div class="mdl-layout__title">
+    <span>
+        <h4>PLEASE ENTER </br>USERNAME & PASSWORD:</h4>
+    </span>
+</div>
 
-    <h1><span class="fa fa-sign-in"></span>Aalto University Signup</h1>
-
+<main class="mdl-layout__content">
     <!-- show any messages that come back with authentication -->
-    <% if (message.length > 0) { %>
-        <div class="alert alert-danger"><%= message %></div>
-    <% } %>
-
-    <!-- LOGIN FORM -->
+    <div id="msg">
+        <% if (message.length > 0) { %>
+        <div class="mdl-grid">
+            <span class="message"><%= message %></span>
+        </div>
+        <% } %>
+    </div>
+    <!-- SIGNUP FORM -->
     <form action="/signup" method="post">
-        <div class="form-group">
-            <label>Email</label>
-            <input type="text" class="form-control" name="email">
+        <div class="mdl-grid">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" id="email" name="email">
+                <label class="mdl-textfield__label" for="email">Email</label>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" class="form-control" name="password">
+        <div class="mdl-grid">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="password" id="password" name="password">
+                <label class="mdl-textfield__label" for="password">Password</label>
+            </div>
         </div>
-
-        <button type="submit" class="btn btn-warning btn-lg">Signup</button>
+        <div class="mdl-grid">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="password" id="confirmpwd" name="confirmpwd"
+                       oninput="confirmPassword(this.value)">
+                <label class="mdl-textfield__label" for="password">Confirm Password</label>
+            </div>
+        </div>
+        <div class="mdl-grid">
+            <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">Signup</button>
+        </div>
     </form>
 
-    <hr>
-
-    <p>Already have an account? <a href="/login">Login</a></p>
-    <p>Or go <a href="/">home</a>.</p>
-
+    <div style="margin-top: 10px" class="mdl-grid">
+        <p>Already had an account?</p>
+    </div>
+    <div class="mdl-grid">
+        <p><a href="/login">Login</a></p>
+    </div>
+</main>
 </div>
 
-</div>
+<script>
+    function confirmPassword(value) {
+        // console.log("check");
+        // console.log(document.getElementById("password").value);
+        // console.log(value);
+        if (document.getElementById("password").value !== value) {
+            document.getElementById("msg").innerHTML = "<div class='mdl-grid'><span class='message'>" +
+                    "Confirm password failed</span></div>";
+        } else {
+            document.getElementById("msg").innerHTML = "";
+        }
+    }
+</script>
+
 </body>
 </html>

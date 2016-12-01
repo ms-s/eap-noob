@@ -1,0 +1,471 @@
+<!-- views/pages/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./head %>
+    <style>
+        .demo-card-notification.mdl-card {
+            height: 160px;
+        }
+    </style>
+    <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+</head>
+<body>
+<!-- Always shows a header, even in smaller screens. -->
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--no-drawer-button">
+    <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+            <!-- Title -->
+            <span class="mdl-layout-title"><%=DeviceName%></span>
+            <!-- Add spacer, to align navigation to the right -->
+            <div class="mdl-layout-spacer"></div>
+            <!-- Navigation. We hide it in small screens. -->
+            <button id="demo-menu-lower-right"
+                    class="mdl-button mdl-js-button mdl-button--icon">
+                <i class="material-icons">more_vert</i>
+            </button>
+            <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
+                for="demo-menu-lower-right">
+                <li class="mdl-menu__item" onclick="gotoAddDevice()">Add Devices</li>
+                <li class="mdl-menu__item" onclick="gotoLogout()">Log Out</li>
+            </ul>
+        </div>
+    </header>
+    <main class="mdl-layout__content">
+        <div class="page-content">
+            <div class="mdl-grid" id="cards">
+                <div class="mdl-cell mdl-cell--4-col">
+                    <div class="mdl-card mdl-shadow--2dp" style="width:100%;">
+                        <div class="mdl-card__media" style="background-color: white">
+                            <img src="http://i.kinja-img.com/gawker-media/image/upload/t_original/dckiksbsuyomwbs1paqs.png"
+                                 width="100%" height="100%" border="0" alt="" style="padding:10px;">
+                        </div>
+                        <div class="mdl-card__title">
+                            <h2 class="mdl-card__title-text">
+                                <%=DeviceName%>
+                            </h2>
+                        </div>
+                        <div class="mdl-card__supporting-text">
+                            <p style="margin-bottom: 8px"><%=Description%></p>
+                            <!--<p style="margin-bottom: 8px">
+                                <%//if(DeviceState === "connected") {%>
+                                    Connection State: connected
+                                <%//} else {%>
+                                    Connection State: disconnected
+                                <%//}%>
+                            </p>-->
+                        </div>
+                    </div>
+                </div>
+
+                <%if (NotificationList.length > 0) {%>
+                    <% NotificationList.forEach(function(notification) { %>
+                    <div class="mdl-cell mdl-cell--4-col" id="<%=notification.NotificationID%>">
+                        <div class="mdl-card mdl-shadow--2dp" style="width:100%;">
+                            <div class="mdl-card__title">
+                                <h2 class="mdl-card__title-text">
+                                    <%if (notification.NotificationType === "SoftwareUpdate") {%>
+                                    Software Update
+                                    <%} else if (notification.NotificationType === "VideoListUpdate") {%>
+                                    New Vedio for You
+                                    <%} else {%>
+                                    New Audio for You
+                                    <%}%>
+                                </h2>
+                            </div>
+                            <div class="mdl-card__supporting-text">
+                                <%=notification.Description %>
+                            </div>
+                            <div class="mdl-card__actions mdl-card--border">
+                                <%if (notification.NotificationType === "SoftwareUpdate") {%>
+                                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
+                                   onclick="notificationAction(this, '<%=notification.NotificationID%>', 'details', 'SoftwareUpdate')">
+                                    Details
+                                </a>
+                                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
+                                   onclick="notificationAction(this, '<%=notification.NotificationID%>', 'agree', 'SoftwareUpdate')">
+                                    Agree
+                                </a>
+                                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
+                                   onclick="notificationAction(this, '<%=notification.NotificationID%>', 'cancel',
+                                           'SoftwareUpdate')">
+                                    Cancel
+                                </a>
+                                <%} else {%>
+                                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
+                                   onclick="notificationAction(this, '<%=notification.NotificationID%>', 'details',
+                                           '<%=notification.NotificationType%>')">
+                                    Details
+                                </a>
+                                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
+                                   onclick="notificationAction(this, '<%=notification.NotificationID%>', 'cancel',
+                                           '<%=notification.NotificationType%>')">
+                                    Cancel
+                                </a>
+                                <%}%>
+                            </div>
+                        </div>
+                    </div>
+                    <% });%>
+
+                <%}%>
+
+                <div class="mdl-cell mdl-cell--4-col">
+                    <div class="mdl-card mdl-shadow--2dp" style="min-height: 0px; width: 100%">
+                        <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;"
+                                onclick="getVideos(this)" source="youtube">
+                            <img src="images/YouTube-logo-full_color.png"
+                                 height="100%" border="0" alt="" style="padding:10px;">
+                        </button>
+
+                        <ul class="mdl-list" id="controlPad">
+                            <li class="mdl-list__item">
+                                <div class="mdl-textfield mdl-js-textfield">
+                                    <input class="mdl-textfield__input" type="text" id="search" disabled>
+                                    <label class="mdl-textfield__label" for="search">Search Content</label>
+                                </div>
+                                <button class="mdl-button mdl-js-button mdl-button--icon" id="search-icon" onclick="search()" disabled>
+                                    <i class="material-icons">search</i>
+                                </button>
+                            </li>
+
+                            <li class="mdl-list__item" id="nowPlaying">NOW PLAYING: </li>
+                            <li class="mdl-list__item">
+                                <div style="margin-left:auto; margin-right:auto">
+                                    <button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, true)" id="skipPrevious" disabled>
+                                        <i class="material-icons">skip_previous</i>
+                                    </button>
+                                    <button id="play-button" class="mdl-button mdl-js-button mdl-button--icon" onclick="playVideo(this, false)" disabled>
+                                        <i class="material-icons">play_arrow</i>
+                                    </button>
+                                    <button class="mdl-button mdl-js-button mdl-button--icon" id="skipNext" onclick="skip(this, false)" disabled>
+                                        <i class="material-icons">skip_next</i>
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="mdl-list__item">
+                                <div style="margin-left:auto; margin-right:auto">
+                                    <i class="material-icons">volume_up</i>
+                                </div>
+                            </li>
+                            <li>
+                                <input class="mdl-slider mdl-js-slider" type="range" min="0" max="20" value="0"
+                                       tabindex="0" id="volumeSlider" oninput="clickSlider(this.value)" disabled>
+                            </li>
+                        </ul>
+                        <ul class="mdl-list" id="videoContents">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <% include ./footer-devices.ejs %>
+</div>
+</body>
+<script>
+    var ContentList = [];
+    var videourlnow = ""
+    var videonamenow = ""
+    var action="pause" // play/pause
+
+    googleApiClientReady = function() {
+        gapi.auth.init(function() {
+            //window.setTimeout(checkAuth, 1);
+        });
+    }
+
+    function clickSlider(value) {
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL="
+                + videourlnow + "&source=youtube&action=" + value;
+        xhttp.open("POST", url, true)
+        xhttp.send()
+    }
+
+    function gotoDevices() {
+        window.location = "/devices?userID=<%=UserID%>";
+    }
+
+    function gotoHome() {
+        window.location = "/profile";
+    }
+
+    function notificationAction(button, notificationID, action, type) {
+
+        if (action === "cancel") {
+            var child = document.getElementById(notificationID);
+            child.parentNode.removeChild(child)
+        }
+
+        var xhttp = new XMLHttpRequest();
+        var url = "/profile?notification=" + notificationID + "&Action=" + action + "&Type=" + type
+        xhttp.open("POST", url, true)
+        xhttp.send()
+    }
+
+    function gotoAddDevice() {
+        window.location = "/addDevice";
+    }
+
+    function gotoLogout() {
+        window.location = "/logout";
+    }
+
+    function getVideos(button) {
+        checkAuth();
+    }
+
+    // The client ID is obtained from the {{ Google Cloud Console }}
+    // at {{ https://cloud.google.com/console }}.
+    // If you run this code from a server other than http://localhost,
+    // you need to register your own client ID.
+    var OAUTH2_CLIENT_ID = '822254206365-9fh35jr0c1qqtrrlos8k23enkmm9qb32.apps.googleusercontent.com';
+    var OAUTH2_SCOPES = [
+        'https://www.googleapis.com/auth/youtube'
+    ];
+
+    // Attempt the immediate OAuth 2.0 client flow as soon as the page loads.
+    // If the currently logged-in Google Account has previously authorized
+    // the client specified as the OAUTH2_CLIENT_ID, then the authorization
+    // succeeds with no user intervention. Otherwise, it fails and the
+    // user interface that prompts for authorization needs to display.
+    function checkAuth() {
+        gapi.auth.authorize({
+            client_id: OAUTH2_CLIENT_ID,
+            scope: OAUTH2_SCOPES,
+            immediate: false
+        }, handleAuthResult);
+    }
+
+    // Handle the result of a gapi.auth.authorize() call.
+    function handleAuthResult(authResult) {
+        console.log(authResult);
+        if (authResult && !authResult.error) {
+            // Authorization was successful. Hide authorization prompts and show
+            // content that should be visible after authorization succeeds.
+            $('.pre-auth').hide();
+            $('.post-auth').show();
+            loadAPIClientInterfaces();
+        } else {
+            // Make the #login-link clickable. Attempt a non-immediate OAuth 2.0
+            // client flow. The current function is called when that flow completes.
+            $('#login-link').click(function() {
+                gapi.auth.authorize({
+                    client_id: OAUTH2_CLIENT_ID,
+                    scope: OAUTH2_SCOPES,
+                    immediate: false
+                }, handleAuthResult);
+            });
+        }
+    }
+
+    // Load the client interfaces for the YouTube Analytics and Data APIs, which
+    // are required to use the Google APIs JS client. More info is available at
+    // https://developers.google.com/api-client-library/javascript/dev/dev_jscript#loading-the-client-library-and-the-api
+    function loadAPIClientInterfaces() {
+        gapi.client.load('youtube', 'v3', function() {
+            console.log("abc");
+            handleAPILoaded();
+        });
+    }
+
+    // After the API loads, call a function to enable the search box.
+    function handleAPILoaded() {
+        // $('#search-button').attr('disabled', false);
+        var request = gapi.client.youtube.activities.list({
+            part: 'snippet',
+            maxResults: 20,
+            home: true
+        });
+
+        request.execute(function(response) {
+            var str = JSON.stringify(response.result);
+            console.log(str);
+            showContentList(response.result);
+            showControlPad();
+            //$('#search-container').html('<pre>' + str + '</pre>');
+        });
+    }
+
+    function search() {
+        var q = $('#search').val();
+        console.log(q);
+        var request = gapi.client.youtube.search.list({
+            q: q,
+            part: 'snippet',
+            maxResults: 20
+        });
+//        var request = gapi.client.youtube.activities.list({
+//            part: 'snippet',
+//            maxResults: 20,
+//            home: true
+//        });
+
+        request.execute(function(response) {
+            var str = JSON.stringify(response.result);
+            console.log(str);
+            showContentList(response.result);
+        });
+    }
+
+
+    function showContentList(jsonResult) {
+        var jsonData = jsonResult;
+        var items = jsonData['items'];
+        ContentList = [];
+        for (index in items) {
+            var contentName;
+            var description;
+            var imageUrl;
+            var videoUrl;
+            var snippet = items[index]['snippet'];
+            contentName = snippet['title'];
+            description = snippet['description'];
+            imageUrl = snippet['thumbnails']['default']['url'];
+            var parts = imageUrl.split('/');
+            var videoID = parts[4];
+            videoUrl = 'https://www.youtube.com/watch?v=' + videoID;
+            console.log("parse: " + videoUrl);
+            var json = {
+                'ContentName': contentName,
+                'Description': description,
+                'ImageURL': imageUrl,
+                'VideoURL': videoUrl
+            };
+            ContentList.push(json);
+        }
+
+        var txt = "";
+        if (ContentList.length > 0) {
+            ContentList.forEach(function(video) {
+                txt += "<li class='mdl-list__item mdl-list__item--three-line'>";
+                txt += "<span class='mdl-list__item-primary-content'>";
+                txt += "<img src='" + video['ImageURL'] + "' class='mdl-list__item-avatar'>";
+                txt += "<span>" + video['ContentName'].substr(0, 20) + "</span>";
+                txt += "<span class='mdl-list__item-text-body'>" + video['Description'].substr(0, 50) +
+                        "</span></span>";
+                txt += "<span class='mdl-list__item-secondary-content'> " +
+                        "<a class='mdl-list__item-secondary-action' value-name='" +
+                        video['ContentName'].replace('\'', '') +
+                        "'value-url='" + video['VideoURL'].replace('\'', '') + "' onclick='playVideo(this, true)'>";
+                txt += "<i class='material-icons'>keyboard_arrow_right</i>";
+                txt += "</a></span></li>";
+
+                console.log("video content name: " + video['ContentName']);
+                console.log("video url: " + video['VideoURL']);
+            });
+        }
+
+        document.getElementById("videoContents").innerHTML = txt;
+    }
+
+    function showControlPad() {
+        document.getElementById("skipPrevious").disabled = false;
+        document.getElementById("play-button").disabled = false;
+        document.getElementById("skipNext").disabled = false;
+        document.getElementById("volumeSlider").disabled = false;
+        document.getElementById("search").disabled = false;
+        document.getElementById("search-icon").disabled = false;
+    }
+
+    function skip(buttion, isPrevious) {
+        var num = 0;
+        var videoname = "";
+        var videourl = "";
+
+        if (ContentList.length > 0) {
+            videoname = ContentList[0]['ContentName'];
+            videourl = ContentList[0]['VideoURL'];
+            console.log(videoname);
+            console.log(videourl);
+        }
+
+        for (i = 0; i < ContentList.length; i++) {
+
+            if (ContentList[i]['ContentName'] === videonamenow) {
+                console.log(i);
+
+                if (isPrevious) {
+                    num = (i + ContentList.length - 1) % ContentList.length;
+                    videoname = ContentList[num]['ContentName'];
+                    videourl = ContentList[num]['VideoURL'];
+                } else {
+                    num = (i + 1) % ContentList.length;
+                    videoname = ContentList[num]['ContentName'];
+                    videourl = ContentList[num]['VideoURL'];
+                }
+            }
+        }
+
+        videonamenow = videoname;
+        videourlnow = videourl;
+
+        console.log("video now = " + videonamenow)
+        console.log("video url = " + videourl)
+        console.log("video url = " + videourlnow)
+
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL="
+                + videourlnow + "&source=youtube&action=" + action;
+        xhttp.open("POST", url, true)
+        xhttp.send()
+    }
+
+    function playVideo(button, bylist) {
+        action = "play"
+        if (ContentList.length > 0) {
+            if (videonamenow === "") {
+                videonamenow = ContentList[0]['ContentName'];
+                videourlnow = ContentList[0]['VideoURL'];
+            }
+        }
+
+        if (!bylist) {
+            if (document.getElementById("play-button").innerHTML.indexOf("pause") >= 0) {
+                document.getElementById("play-button").innerHTML = "<i class=\"material-icons\">play_arrow</i>"
+                action = "pause"
+            } else {
+                document.getElementById("play-button").innerHTML = "<i class=\"material-icons\">pause</i>"
+                action = "play"
+            }
+        } else {
+            console.log("video now name:" + videonamenow)
+            console.log("button name:" + button.getAttribute("value-name"))
+            if (document.getElementById("play-button").innerHTML.indexOf("pause") >= 0
+                    && (videonamenow != "") && (videonamenow === button.getAttribute("value-name"))) {
+                document.getElementById("play-button").innerHTML = "<i class=\"material-icons\">play_arrow</i>"
+                videonamenow = button.getAttribute("value-name")
+                videourlnow = button.getAttribute("value-url")
+                action = "pause"
+            } else {
+                document.getElementById("play-button").innerHTML = "<i class=\"material-icons\">pause</i>"
+                videonamenow = button.getAttribute("value-name")
+                videourlnow = button.getAttribute("value-url")
+                action = "play"
+            }
+        }
+
+        console.log("video now = " + videonamenow);
+        console.log("video url = " + videourlnow);
+
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL="
+                + videourlnow + "&source=youtube&action=" + action;
+        xhttp.open("POST", url, true)
+        xhttp.send()
+    }
+
+    function gotoDevices() {
+        window.location = "/devices?userID=<%=UserID%>";
+    }
+
+    function gotohome() {
+        window.location = "/profile";
+    }
+
+</script>
+
+</html>
