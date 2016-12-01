@@ -819,6 +819,27 @@ module.exports = function(app, passport) {
         serverDB.close();
     });
 
+    app.post('/revokeAuthUser', function(req, res) {
+        var deviceID;
+        var userID;
+
+        var query = req._parsedUrl.query;
+        var parts = query.split('&');
+
+        tmpParts = parts[0].split('=');
+        deviceID = parseInt(tmpParts[1]);
+        tmpParts = parts[1].split('=');
+        userID = parseInt(tmpParts[1]);
+
+        serverDB = new sqlite3.Database(serverDBPath);
+        serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
+            if (!err) {
+                console.log('ERROR in /revokeAuthUser: ' + err);
+            }
+        })
+        serverDB.close();     
+    });
+
     // =====================================
     // LOGOUT ==============================
     // =====================================
