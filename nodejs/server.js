@@ -94,12 +94,10 @@ var server = ws.createServer(property, function (conn) {
             console.log(msg);
 
             serverDB = new sqlite3.Database(serverDBPath);
-            console.log('initialize serverDB');
             var contentList = msg['ContentList'];
             var deviceID;
-            var userID;
-            console.log('ready to run server');
-            serverDB.get('select DeviceID, UserID from Device where ConnectionID = ?', connectionID, function(err, row) {
+            var userID = parseInt(msg['UserID']);
+            serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
                 if (!err) {
                     deviceID = row.DeviceID;
 
@@ -122,23 +120,23 @@ var server = ws.createServer(property, function (conn) {
         }
     });
 
-    var deviceID;
-    serverDB = new sqlite3.Database(serverDBPath);
-    serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
+    // // for DEBUG use
+    // var deviceID;
+    // serverDB = new sqlite3.Database(serverDBPath);
+    // serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
         
-        deviceID = row.DeviceID;
-        console.log('DeviceID: ' + deviceID);
-        if (!err) {
-            if (deviceID != undefined) {
-                connMap[deviceID] = conn;
-            }
-        } else {
-            console.log('ERROR: ' + err);
-        }
-    });
+    //     deviceID = row.DeviceID;
+    //     console.log('DeviceID: ' + deviceID);
+    //     if (!err) {
+    //         if (deviceID != undefined) {
+    //             connMap[deviceID] = conn;
+    //         }
+    //     } else {
+    //         console.log('ERROR: ' + err);
+    //     }
+    // });
+    // connMap['Lehao'] = conn;
 
-    connMap['Lehao'] = conn;
-    // console.log(connMap);
 }).listen(9000);
 
 // set up our express application
@@ -229,7 +227,7 @@ app.post('/control', function(req, res) {
     var tmpParts;
 
     tmpParts = parts[0].split('=');
-    userID = tmpParts[1];
+    userID = parseInt(tmpParts[1]);
     tmpParts = parts[1].split('=');
     deviceID = parseInt(tmpParts[1]);
     tmpParts = parts[2].split('=');
