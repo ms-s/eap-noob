@@ -120,6 +120,16 @@
                         </button>
 
                         <ul class="mdl-list" id="controlPad">
+                            <li class="mdl-list__item">
+                                <div class="mdl-textfield mdl-js-textfield">
+                                    <input class="mdl-textfield__input" type="text" id="search" disabled>
+                                    <label class="mdl-textfield__label" for="search">Search Content</label>
+                                </div>
+                                <button class="mdl-button mdl-js-button mdl-button--icon" id="search-icon" onclick="search()" disabled>
+                                    <i class="material-icons">search</i>
+                                </button>
+                            </li>
+
                             <li class="mdl-list__item" id="nowPlaying">NOW PLAYING: </li>
                             <li class="mdl-list__item">
                                 <div style="margin-left:auto; margin-right:auto">
@@ -167,14 +177,6 @@
         });
     }
 
-    function checkAuth() {
-        gapi.auth.authorize({
-            client_id: OAUTH2_CLIENT_ID,
-            scope: OAUTH2_SCOPES,
-            immediate: false
-        }, handleAuthResult);
-    }
-
     function clickSlider(value) {
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL="
@@ -213,15 +215,7 @@
     }
 
     function getVideos(button) {
-        //var xhttp = new XMLHttpRequest();
-
         checkAuth();
-
-        // console.log(<%=UserID%>)
-        // var url = "/contentList?userID=<%=UserID%>&contentType=video&Source=YouTube&deviceID=<%=DeviceID%>"
-        //xhttp.open("POST", url, true)
-        //xhttp.send()
-        // window.location = url;
     }
 
     // The client ID is obtained from the {{ Google Cloud Console }}
@@ -296,6 +290,28 @@
         });
     }
 
+    function search() {
+        var q = $('#search').val();
+        console.log(q);
+        var request = gapi.client.youtube.search.list({
+            q: q,
+            part: 'snippet',
+            maxResults: 20
+        });
+//        var request = gapi.client.youtube.activities.list({
+//            part: 'snippet',
+//            maxResults: 20,
+//            home: true
+//        });
+
+        request.execute(function(response) {
+            var str = JSON.stringify(response.result);
+            console.log(str);
+            showContentList(response.result);
+        });
+    }
+
+
     function showContentList(jsonResult) {
         var jsonData = jsonResult;
         var items = jsonData['items'];
@@ -312,6 +328,7 @@
             var parts = imageUrl.split('/');
             var videoID = parts[4];
             videoUrl = 'https://www.youtube.com/watch?v=' + videoID;
+            console.log("parse: " + videoUrl);
             var json = {
                 'ContentName': contentName,
                 'Description': description,
@@ -331,10 +348,14 @@
                 txt += "<span class='mdl-list__item-text-body'>" + video['Description'].substr(0, 50) +
                         "</span></span>";
                 txt += "<span class='mdl-list__item-secondary-content'> " +
-                        "<a class='mdl-list__item-secondary-action' value-name='" + video['ContentName'] +
-                        "'value-url='" + video['VideoURL'] + "' onclick='playVideo(this, true)'>";
+                        "<a class='mdl-list__item-secondary-action' value-name='" +
+                        video['ContentName'].replace('\'', '') +
+                        "'value-url='" + video['VideoURL'].replace('\'', '') + "' onclick='playVideo(this, true)'>";
                 txt += "<i class='material-icons'>keyboard_arrow_right</i>";
                 txt += "</a></span></li>";
+
+                console.log("video content name: " + video['ContentName']);
+                console.log("video url: " + video['VideoURL']);
             });
         }
 
@@ -346,6 +367,8 @@
         document.getElementById("play-button").disabled = false;
         document.getElementById("skipNext").disabled = false;
         document.getElementById("volumeSlider").disabled = false;
+        document.getElementById("search").disabled = false;
+        document.getElementById("search-icon").disabled = false;
     }
 
     function skip(buttion, isPrevious) {
@@ -356,6 +379,8 @@
         if (ContentList.length > 0) {
             videoname = ContentList[0]['ContentName'];
             videourl = ContentList[0]['VideoURL'];
+            console.log(videoname);
+            console.log(videourl);
         }
 
         for (i = 0; i < ContentList.length; i++) {
@@ -379,6 +404,8 @@
         videourlnow = videourl;
 
         console.log("video now = " + videonamenow)
+        console.log("video url = " + videourl)
+        console.log("video url = " + videourlnow)
 
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL="
@@ -420,6 +447,9 @@
                 action = "play"
             }
         }
+
+        console.log("video now = " + videonamenow);
+        console.log("video url = " + videourlnow);
 
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL="
