@@ -258,69 +258,73 @@ module.exports = function(app, passport) {
         });
     });
 
-    app.get('/insertDevice', function(req, res) {
-        console.log('GET /insertDevice');
+ //    app.get('/insertDevice', function(req, res) {
+ //        console.log('GET /insertDevice');
 
-        var peer_id = req.query.PeerId;
-        var queryObject = url.parse(req.url,true).query;
-        var len = Object.keys(queryObject).length;
+ //        var peer_id = req.query.PeerId;
+ //        var queryObject = url.parse(req.url,true).query;
+ //        var len = Object.keys(queryObject).length;
 
-        if(len != 1 || peer_id == undefined)
-        {
-         res.json({"status":"failed"});
-     }else{
-         console.log('req received');
+ //        if(len != 1 || peer_id == undefined)
+ //        {
+ //         res.json({"status":"failed"});
+ //     }else{
+ //         console.log('req received');
 
-         db = new sqlite3.Database(conn_str);
-         serverDB = new sqlite3.Database(serverDBPath);
-         db.get('SELECT count(*) AS rowCount, PeerID, serv_state, PeerInfo, errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
+ //         db = new sqlite3.Database(conn_str);
+ //         serverDB = new sqlite3.Database(serverDBPath);
+ //         db.get('SELECT count(*) AS rowCount, PeerID, serv_state, PeerInfo, errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
 
-            if (err){res.json({"status": "failed"});}
-            else if(row.rowCount != 1) {console.log(row.length);res.json({"status": "refresh"});}
-            else {
+ //            if (err){res.json({"status": "failed"});}
+ //            else if(row.rowCount != 1) {console.log(row.length);res.json({"status": "refresh"});}
+ //            else {
 
-                var options = {
-                    mode: 'text',
-                    pythonPath: '/usr/bin/python',
-                    pythonOptions: ['-u'],
-                    scriptPath: configDB.ooblibPath,
-                    args: ['-o', peer_id]
-                };
-                var parseJ;
-                PythonShell.run('oobmessage.py', options, function (err,results) {
-                    if (err){console.log("results : ",results); res.json({"status": "failed"});}
-                    else{
-                        parseJ = JSON.parse(results);
-                        var noob = parseJ['noob'];
-                        var hoob = parseJ['hoob'];
-                        var hash = crypto.createHash('sha256');
-                        var hash_str = noob+'AFARMERLIVEDUNDERTHEMOUNTAINANDGREWTURNIPSFORALIVING'
-                    hash.update(hash_str);
-                    var hint =  base64url.encode(hash.digest());
+ //                var options = {
+ //                    mode: 'text',
+ //                    pythonPath: '/usr/bin/python',
+ //                    pythonOptions: ['-u'],
+ //                    scriptPath: configDB.ooblibPath,
+ //                    args: ['-o', peer_id]
+ //                };
+ //                var parseJ;
+ //                PythonShell.run('oobmessage.py', options, function (err,results) {
+ //                    if (err){console.log("results : ",results); res.json({"status": "failed"});}
+ //                    else{
+ //                        parseJ = JSON.parse(results);
+ //                        var noob = parseJ['noob'];
+ //                        var hoob = parseJ['hoob'];
+ //                        var hash = crypto.createHash('sha256');
+ //                        var hash_str = noob+'AFARMERLIVEDUNDERTHEMOUNTAINANDGREWTURNIPSFORALIVING'
+ //                    hash.update(hash_str);
+ //                    var hint =  base64url.encode(hash.digest());
 
-                    serverDB.all('select UserID from User where UserName = ?', req.user.username, function(err, userRows) {
-                        userRows.forEach(function(row) {
-                            serverDB.run('insert into Device (DeviceID, DeviceName, DeviceState, Description, UserID, Image) \
-                            values(?, ?, ?, ?, ?, ?)',
-                            peer_id, 'Device Name', 'Device State', row.PeerInfo, row.UserID, 'Image',
-                            function(err, row) {
-                                serverDB.close();
-                            });
-                        });
-                    });
+ //                    serverDB.get('select UserID from User where UserName = ?', req.user.username, function(err, userRow) {
+ //                        serverDB.run('insert into Device (DeviceID, DeviceName, DeviceState, Description, Image) \
+ //                        values(?, ?, ?, ?, ?, ?)',
+ //                        peer_id, 'Device Name', 'Device State', userRow.PeerInfo, 'Image',
+ //                        function(err, row) {
+ //                            if (!err) {
+ //                                serverDB.run('insert into AuthorizedUser (DeviceID, UserID, Permission) values(?, ?, ?)',
+ //                                    peer_id, userRow.UserID, 0, function(err, row) {
 
-                    db.get('INSERT INTO devices (PeerID, serv_state, PeerInfo, Noob, Hoob,Hint,errorCode, username) values(?,?,?,?,?,?,?,?)', peer_id, row.serv_state, row.PeerInfo, noob, hoob, hint.slice(0,32),0, req.user.username, function(err, row) {
-                        db.close();
-                        if (err){console.log(err);res.json({"status": "failed"});}
-                        else {res.json({"status": "success"});}
-                    });
-                }
-            });
-            }
-        });
+ //                                    });
+ //                            }
+ //                        });
+ //                    });
+ //                    serverDB.close();
 
-     }
- });
+ //                    db.get('INSERT INTO devices (PeerID, serv_state, PeerInfo, Noob, Hoob,Hint,errorCode, username) values(?,?,?,?,?,?,?,?)', peer_id, row.serv_state, row.PeerInfo, noob, hoob, hint.slice(0,32),0, req.user.username, function(err, row) {
+ //                        db.close();
+ //                        if (err){console.log(err);res.json({"status": "failed"});}
+ //                        else {res.json({"status": "success"});}
+ //                    });
+ //                }
+ //            });
+ //            }
+ //        });
+
+ //     }
+ // });
 
     app.get('/python', function(req, res) {
         console.log('GET /python');
