@@ -1,6 +1,7 @@
 // app/routes.js
 var common = require('../common');
 var connMap = common.connMap;
+
 var fs = require('fs');
 
 function base64_encode(file) {
@@ -360,7 +361,7 @@ module.exports = function(app, passport) {
 
         var parts = query.split('&');
         var tmpParts = parts[0].split('=');
-        var userID = tmpParts[1];
+        var userID = parseInt(tmpParts[1]);
         tmpParts = parts[1].split('=');
         var contentType = tmpParts[1];
         tmpParts = parts[2].split('=');
@@ -377,16 +378,13 @@ module.exports = function(app, passport) {
         var contentList = [];
 
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, rows) {
+        serverDB.get('select DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
             if (!err) {
-                rows.forEach(function(row) {
-                    deviceName = row.DeviceName;
-                    deviceState = row.DeviceState;
-                    description = row.Description;
-                    deviceType = row.DeviceType;
-                    image = row.Image;
-                    // deviceType = row.DeviceType;
-                });
+                deviceName = deviceRow.DeviceName;
+                deviceState = deviceRow.DeviceState;
+                description = deviceRow.Description;
+                deviceType = deviceRow.DeviceType;
+                image = deviceRow.Image;
             }
 
             serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
@@ -440,11 +438,11 @@ module.exports = function(app, passport) {
                         console.log('Invalid DeviceType');
                         res.send('Invalid DeviceType');
                     }
-                    
-                    serverDB.close();
                 });
             })
         });
+
+        serverDB.close();
     });
 
     app.get('/getAudio', function(req, res) {
@@ -472,13 +470,10 @@ module.exports = function(app, passport) {
 
         // wait for 500ms
         setTimeout(function() {
-            serverDB = new sqlite3.Database(serverDBPath);        
-            // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
-            // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+            serverDB = new sqlite3.Database(serverDBPath);
             serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
                 UserID, ContentType, Source,
                 function(err, rows) {
-                    // console.log('/getAudio return values: ' + rows);
                     if (!err) {
                         rows.forEach(function(row) {
                             contentList.push({
@@ -529,7 +524,7 @@ module.exports = function(app, passport) {
         var notificationList = [];
         var deviceList = [];
 
-        serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
+        serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
             if (err) {
                 res.render('profile.ejs', {
                     UserID: userID,
@@ -540,9 +535,9 @@ module.exports = function(app, passport) {
                 serverDB.close();
                 return;
             }
-            userRows.forEach(function(row) {
-                userID = row.UserID;
-            });
+
+            userID = userRow.UserID;
+
             serverDB.all('select NotificationID, DeviceID, NotificationType, Description from Notification where UserID = ?', userID, function(err, notificationRows) {
                 if (err) {
                     res.render('profile.ejs', {
@@ -562,7 +557,8 @@ module.exports = function(app, passport) {
                         Description: row.Description});
                 });
 
-                serverDB.all('select DeviceID, DeviceType, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+                serverDB.all('select D.DeviceID, D.DeviceType, D.DeviceName, D.Image, D.Description from Device as D, AuthorizedUser as A\
+                    where D.DeviceID = A.DeviceID and A.UserID = ?', userID, function(err, deviceRows) {
                     if (err) {
                         res.render('profile.ejs', {
                             UserID: userID,
@@ -636,23 +632,20 @@ module.exports = function(app, passport) {
         var contentList = [];
         var deviceID;
 
-        serverDB.all('select DeviceID from Notification where NotificationID = ?', notificationID, function(err, rows) {
+        serverDB.get('select DeviceID, UserID from Notification where NotificationID = ?', notificationID, function(err, notificationRow) {
             if (!err) {
-                rows.forEach(function(row) {
-                    deviceID = row.DeviceID;
-                });
+                deviceID = notificationRow.DeviceID;
+                userID = notificationRow.UserID;
             }
-            serverDB.all('select UserID, DeviceName, DeviceState, SoftwareUpdateURL, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRows) {
+
+            serverDB.get('select DeviceName, DeviceState, SoftwareUpdateURL, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
                 if (!err) {
-                    deviceRows.forEach(function(row) {
-                        userID = row.UserID;
-                        deviceName = row.DeviceName;
-                        deviceState = row.DeviceState;
-                        description = row.Description;
-                        image = row.Image;
-                        softwareUpdateURL = row.SoftwareUpdateURL;
-                        deviceType = row.deviceType;
-                    });
+                    deviceName = deviceRow.DeviceName;
+                    deviceState = deviceRow.DeviceState;
+                    description = deviceRow.Description;
+                    image = deviceRow.Image;
+                    softwareUpdateURL = deviceRow.SoftwareUpdateURL;
+                    deviceType = deviceRow.deviceType;
                 }
 
                 serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
@@ -764,11 +757,9 @@ module.exports = function(app, passport) {
         var query = req._parsedUrl.query;
         console.log('GET /checkUpdate');
         console.log('Query: ' + query);
-        // if (query == null) {
-        //     return;
-        // }
+
         var parts = query.split('=');
-        var userID = parts[1];
+        var userID = parseInt(parts[1]);
         var notificationList = [];
         serverDB = new sqlite3.Database(serverDBPath);
         serverDB.all('select NotificationID, DeviceID, NotificationType, Description from Notification where UserID = ?', userID, function(err, rows) {
@@ -872,17 +863,26 @@ module.exports = function(app, passport) {
 
             console.log('prepare to add uninitialized device into database')
             serverDB = new sqlite3.Database(serverDBPath);
+            // TODO:
+            // where to have the userID
+            // how to get the PrimaryKey (DeviceID) of the newly inserted tuple?
             serverDB.run(
-                'insert into Device (ConnectionID, UserID) \
-                values(?, ?)',
-                peer_id, 1,
+                'insert into Device (DeviceID, ConnectionID, UserID) \
+                values(?, ?, ?)',
+                common.GlobalDeviceID, peer_id, 1,
                 function(err, row) {
                     if (err) {
                         console.log('ERROR: ' + err);
                     }
-                    serverDB.close();
+                    serverDB.run(
+                        'insert into AuthorizedUser (DeviceID, UserID, Permission) \
+                        values(?, ?, ?)'
+                        common.GlobalDeviceID, 1, 0, function(err, row){
+                            common.GlobalDeviceID += 1;
+                        });
                 }
             );
+            serverDB.close();
         }
  });
 
