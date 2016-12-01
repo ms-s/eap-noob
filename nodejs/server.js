@@ -47,31 +47,100 @@ var property = {
   requestCert: true,
   rejectUnauthorized: false
 };
+
 var server = ws.createServer(property, function (conn) {
     console.log("New connection requested to: " + conn.path);
     console.log(conn.path);
     // simple userID, anything after '/'
     // should use database here
-    var deviceID = conn.path.substring(1);
+    var connectionID = conn.path.substring(1);
     conn.on('close', function (code, reason) {
-        console.log("Connection closed")
+        console.log("Connection closed");
     });
 
     // parse received text
     conn.on('text', function(str) {
-      msg = JSON.parse(str);
-      if (msg['Type'] == 'Metadata') {
-        var deviceName = msg['DeviceName'];
-        var deviceType = msg['DeviceType'];
-        var updateSource = msg['UpdateSource'];
-        // need to update database according to deviceID
-      } else {
-        console.log("Unknown message" + str);
-      }
+        console.log('websocket on text');
+        msg = JSON.parse(str);
+        if (msg['Type'] == 'Metadata') {
+            console.log('Type == Metadata');
+            console.log(msg);
+
+            var deviceName = msg['DeviceName'];
+            var deviceType = msg['DeviceType'];
+            var updateSource = msg['UpdateSource'];
+            var deviceDescription = msg['DeviceDescription'];
+            console.log('DeviceName: ' + deviceName);
+            console.log('DeviceDescription: ' + deviceDescription);
+
+            // need to update database according to deviceID
+            var deviceID;
+            serverDB = new sqlite3.Database(serverDBPath);
+            serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
+                deviceID = row.DeviceID;
+                serverDB.serialize(function() {
+                    var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, SoftwareUpdateURL = ?, Description = ? WHERE DeviceID = ?");
+                    stmt.run(deviceName, deviceType, updateSource, deviceDescription, deviceID);
+                    stmt.finalize();
+                    serverDB.close();
+                });
+            });
+        } else if (msg['Type'] == 'ContentList') {
+            console.log('Type == ContentList');
+            console.log(msg);
+
+            serverDB = new sqlite3.Database(serverDBPath);
+            console.log('initialize serverDB');
+            var contentList = msg['ContentList'];
+            var deviceID;
+            var userID;
+            console.log('ready to run server');
+            serverDB.get('select DeviceID, UserID from Device where ConnectionID = ?', connectionID, function(err, row) {
+                console.log('serverDB Error: ' + err);
+                deviceID = row.DeviceID;
+                userID = row.UserID;
+
+                // serverDB.serialize(function() {
+                //     var stmt = serverDB.prepare('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
+                //         values(?, ?, ?, ?, ?)');
+                //     for (index in contentList) {
+                //         var content = contentList[index];
+                //         stmt.run(content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID);
+                //     }
+                //     stmt.finalize();
+                // })
+
+                for (index in contentList) {
+                    var content = contentList[index];
+                    serverDB.run('insert into ContentList (ContentName, ContentType, ContentURL, Source, UserID) \
+                        values(?, ?, ?, ?, ?)',
+                        content['ContentName'], content['ContentType'], content['ContentURL'], content['Source'], userID,
+                        function(err, row){
+
+                    });
+                }
+            });
+            serverDB.close();
+        } else {
+            console.log("Unknown message" + str);
+        }
     });
-    // should use device ID as key
+
+    var deviceID;
+    serverDB = new sqlite3.Database(serverDBPath);
+    serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
+        console.log('ERROR: ' + err);
+        deviceID = row.DeviceID;
+        console.log('DeviceID: ' + deviceID);
+        if (!err) {
+            if (deviceID != undefined) {
+                connMap[deviceID] = conn;
+            }
+        }
+    });
+
     connMap['Lehao'] = conn;
-    console.log(connMap);
+    // console.log(connMap);
 }).listen(9000);
 
 // set up our express application
@@ -109,6 +178,7 @@ serverDB.serialize(function() {
 
   serverDB.run('create table if not exists Device \
     (DeviceID integer primary key autoincrement, \
+    ConnectionID text, \
     DeviceName text, \
     DeviceState text, \
     Description text, \
@@ -172,7 +242,8 @@ app.post('/control', function(req, res) {
     var softwareName = 'Text File';
     var softwareList = [];
 
-    var content = base64_encode('file.txt');
+    // var content = base64_encode('file.txt');
+    var content;
 
     var jsonData = {
         'type': contentType,
@@ -187,8 +258,8 @@ app.post('/control', function(req, res) {
     console.log('Ready to send control json');
     console.log(jsonData);
 
-    // connMap[deviceID].send(JSON.stringify(jsonData));
-    connMap['Lehao'].send(JSON.stringify(jsonData));
+    connMap[deviceID].send(JSON.stringify(jsonData));
+    // connMap['Lehao'].send(JSON.stringify(jsonData));
     res.json({'status': 'success'});
 });
 

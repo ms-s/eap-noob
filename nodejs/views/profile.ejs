@@ -117,13 +117,15 @@
             <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
                 for="demo-menu-lower-right">
                 <li class="mdl-menu__item" onclick="gotoAddDevice()">Add Devices</li>
-                <li class="mdl-menu__item" onclick="checkSoftwareUpdate()">Check Updates</li>
+                <li class="mdl-menu__item" onclick="checkUpdate()">Check Updates</li>
                 <li class="mdl-menu__item" onclick="gotoLogout()">Log Out</li>
             </ul>
         </div>
     </header>
 
     <main class="mdl-layout__content">
+        <!--<button id="demo-show-toast" class="mdl-button mdl-js-button mdl-button--raised" type="button"
+                onclick="testShowSucceed()">Show Toast</button>-->
 
         <div class="page-content">
             <div class="mdl-grid" id="notifications">
@@ -181,7 +183,7 @@
                 <% Devices.forEach(function(device) {%>
                 <li class="mdl-list__item mdl-list__item--three-line">
                         <span class="mdl-list__item-primary-content">
-                            <img src="<%=device.ImagePath%>" class="mdl-list__item-avatar">
+                            <img src="<%=device.Image%>" class="mdl-list__item-avatar">
                             <span><%=device.DeviceName %></span>
                             <span class="mdl-list__item-text-body">
                                 <%=device.Description%>
@@ -199,11 +201,17 @@
 
     </main>
 
+    <div id="demo-toast-example" class="mdl-js-snackbar mdl-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button"></button>
+    </div>
+
     <% include ./footer-home.ejs %>
 </div>
 
 <script>
-    var checkUpdate = setInterval(checkUpdate, 60000);
+    var checkUpdateTime = setInterval(checkUpdate, 60000);
+    var fakeInterval;
 
     function checkUpdate() {
         var xhttp = new XMLHttpRequest();
@@ -281,6 +289,12 @@
             child.parentNode.removeChild(child)
         }
 
+        if (action === "agree") {
+            fakeInterval = setInterval(showSucceed, 5000);
+            var child = document.getElementById(notificationID);
+            child.parentNode.removeChild(child)
+        }
+
         var xhttp = new XMLHttpRequest();
         var url = "/notification?notification=" + notificationID + "&Action=" + action + "&Type=" + type
         console.log("Send URL: " + url)
@@ -290,6 +304,20 @@
             xhttp.open("GET", url, true)
             xhttp.send()
         }
+    }
+
+    function testShowSucceed() {
+        fakeInterval = setInterval(showSucceed, 5000);
+    }
+
+    function showSucceed() {
+        console.log("show succeed...");
+
+        var snackbarContainer = document.querySelector('#demo-toast-example');
+        var data = {message: 'Update Succeed'};
+        snackbarContainer.MaterialSnackbar.showSnackbar(data);
+
+        clearInterval(fakeInterval);
     }
 
     function gotoDevice(deviceID) {
@@ -319,7 +347,8 @@ function UpdateSoftware(peer_id){
 
 /*function deletePost(peer_id){
 
-	var url_str = "<%/*=url*/%>";
+    //var url_str = "<%/*=url*/%>";
+    var url_str = "";
 	url_str = url_str + "/deleteDevice/?PeerId=" + peer_id; 
 	console.log(url_str);
         var xhttp = new XMLHttpRequest();
@@ -364,9 +393,9 @@ function UpdateSoftware(peer_id){
    } else {
     	
    }	
-}
+}*/
 
-function postItem(element,post_interval,interval,div_element) {
+/*function postItem(element,post_interval,interval,div_element) {
 	var el = document.getElementById(element);
 	var peer_id = el.getAttribute("value1");
 	var peer_state = el.getAttribute("value2");
@@ -439,9 +468,9 @@ function countdown(element, minutes, seconds) {
 
    
 
-}*/
+}
 
-/*function callTimers(){
+function callTimers(){
 	var element;
 	var elm;	
 	for(i=0;;i++){
@@ -459,9 +488,9 @@ function countdown(element, minutes, seconds) {
 		else
 		break;	
 	}
-}
+}*/
 
-callTimers();*/
+//callTimers();
 
 /* Open when someone clicks on the span element */
 function openNav(btn) {

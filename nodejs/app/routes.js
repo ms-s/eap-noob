@@ -1,6 +1,7 @@
 // app/routes.js
 var common = require('../common');
 var connMap = common.connMap;
+var fs = require('fs');
 
 function base64_encode(file) {
     // read binary data
@@ -43,21 +44,24 @@ module.exports = function(app, passport) {
     // HOME PAGE (with login links) ========
     // =====================================
     app.get('/', function(req, res) {
+        console.log('GET /');
+        //res.render('qr_scanner.ejs');
+
         res.render('login.ejs', { message: req.flash('loginMessage')}); // load the index.ejs file
     });
 
     // =====================================
     // LOGIN ===============================
     // =====================================
-    app.get('/login', function(req, res) {
-
-        // render the page and pass in any flash data if it exists
-    //console.log(req.session.returnTo);
+    app.get('GET /login', function(req, res) {
+    console.log('GET /login');
+    // render the page and pass in any flash data if it exists
     res.render('login.ejs', { message: req.flash('loginMessage')}); 
 });
 
     
     app.get('/getDevices', isLoggedIn, function(req, res) {
+        console.log('GET /getDevices');
 
         var device_info = req.query.DeviceInfo;
         var queryObject = url.parse(req.url,true).query;
@@ -98,9 +102,10 @@ module.exports = function(app, passport) {
     });
 
     app.get('/devices', isLoggedIn, function(req, res) {
-        console.log('Start /devices');
-        // userID = req.user.userID;
         var query = req._parsedUrl.query;
+        console.log('GET /devices');
+        console.log('query: ' + query);
+
         var parts = query.split('=');
         var userID = parseInt(parts[1]);
         var userName;
@@ -114,8 +119,6 @@ module.exports = function(app, passport) {
                     userName = row.UserName;
                 });
             }
-            console.log(err);
-            console.log(userName);
             serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', userID, function(err, deviceRows) {
                 if (!err) {
                     deviceRows.forEach(function(row) {
@@ -129,10 +132,6 @@ module.exports = function(app, passport) {
                     });
                 }
 
-                console.log(err);
-                console.log(userID);
-                console.log(userName);
-                console.log(deviceList);
                 res.render('devices.ejs', {
                     UserID: userID,
                     UserName: userName,
@@ -146,6 +145,9 @@ module.exports = function(app, passport) {
 
     app.get('/device', isLoggedIn, function(req, res){
         var query = req._parsedUrl.query;
+        console.log('GET /device');
+        console.log('query: ' + query);
+
         var parts = query.split("=");
         var deviceID = parseInt(parts[1]);
         var deviceName = 'Error';
@@ -155,14 +157,17 @@ module.exports = function(app, passport) {
         var userID = '';
         var notificationList = [];
         var contentList = [];
+        var deviceType = 'N/A';
+
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, rows) {
+        serverDB.all('select UserID, DeviceName, DeviceState, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, rows) {
             if (!err) {
                 rows.forEach(function(row) {
-                    userID = row.userID;
+                    userID = row.UserID;
                     deviceName = row.DeviceName;
                     deviceState = row.DeviceState;
                     description = row.Description;
+                    deviceType = row.DeviceType;
                     image = row.Image;
                 });
             }
@@ -178,23 +183,42 @@ module.exports = function(app, passport) {
                     });
                 }
 
-                res.render('display.ejs', {
-                    DeviceID: deviceID,
-                    UserID: userID,
-                    DeviceName: deviceName,
-                    DeviceState: deviceState,
-                    Description: description,
-                    Image: image,
-                    NotificationList: notificationList,
-                    ContentList: contentList
-                });
+                if (deviceType == 'Video') {
+                    res.render('display.ejs', {
+                        DeviceID: deviceID,
+                        UserID: userID,
+                        DeviceName: deviceName,
+                        DeviceState: deviceState,
+                        Description: description,
+                        Image: image,
+                        NotificationList: notificationList,
+                        ContentList: contentList
+                    });
+                } else if (deviceType == 'Audio') {
+                    res.render('speaker.ejs', {
+                        DeviceID: deviceID,
+                        UserID: userID,
+                        DeviceName: deviceName,
+                        DeviceState: deviceState,
+                        Description: description,
+                        Image: image,
+                        NotificationList: notificationList,
+                        ContentList: contentList
+                    });
+                } else {
+                    console.log('Invalid DeviceType');
+                    res.send('Invalid DeviceType');
+                }
+
+                
                 serverDB.close();
             })
         });
     });
 
     app.get('/insertDevice', function(req, res) {
-        //console.log(req);
+        console.log('GET /insertDevice');
+
         var peer_id = req.query.PeerId;
         var queryObject = url.parse(req.url,true).query;
         var len = Object.keys(queryObject).length;
@@ -229,15 +253,12 @@ module.exports = function(app, passport) {
                         var hoob = parseJ['hoob'];
                         var hash = crypto.createHash('sha256');
                         var hash_str = noob+'AFARMERLIVEDUNDERTHEMOUNTAINANDGREWTURNIPSFORALIVING'
-                    //console.log(hash_str);
                     hash.update(hash_str);
                     var hint =  base64url.encode(hash.digest());
-                    //console.log(hint.slice(0,22));
-                    //console.log(hint.slice(0,32));
 
                     serverDB.all('select UserID from User where UserName = ?', req.user.username, function(err, userRows) {
                         userRows.forEach(function(row) {
-                            serverDB.get('insert into Device (DeviceID, DeviceName, DeviceState, Description, UserID, Image) \
+                            serverDB.run('insert into Device (DeviceID, DeviceName, DeviceState, Description, UserID, Image) \
                             values(?, ?, ?, ?, ?, ?)',
                             peer_id, 'Device Name', 'Device State', row.PeerInfo, row.UserID, 'Image',
                             function(err, row) {
@@ -260,9 +281,8 @@ module.exports = function(app, passport) {
  });
 
     app.get('/python', function(req, res) {
-
+        console.log('GET /python');
         // render the page and pass in any flash data if it exists
-        //console.log(req.session.returnTo)i;
         var parseJ;
         PythonShell.run('oobmessage.py', options, function (err,results) {
             if (err) console.log (err);
@@ -277,6 +297,7 @@ module.exports = function(app, passport) {
     // SIGNUP ==============================
     // =====================================
     app.get('/signup', function(req, res) {
+        console.log('GET /signup');
 
         res.render('signup.ejs', { message: req.flash('signupMessage') });
     });
@@ -376,6 +397,9 @@ module.exports = function(app, passport) {
     app.get('/contentList', isLoggedIn, function(req, res) {
         serverDB = new sqlite3.Database(serverDBPath);
         var query = req._parsedUrl.query;
+        console.log('GET /contentList');
+        console.log('query: ' + query);
+
         var parts = query.split('&');
         var tmpParts = parts[0].split('=');
         var userID = tmpParts[1];
@@ -389,17 +413,19 @@ module.exports = function(app, passport) {
         var deviceName;
         var deviceState;
         var description;
+        var deviceType;
         var image;
         var notificationList = [];
         var contentList = [];
 
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image from Device where DeviceID = ?', deviceID, function(err, rows) {
+        serverDB.all('select UserID, DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, rows) {
             if (!err) {
                 rows.forEach(function(row) {
                     deviceName = row.DeviceName;
                     deviceState = row.DeviceState;
                     description = row.Description;
+                    deviceType = row.DeviceType;
                     image = row.Image;
                     // deviceType = row.DeviceType;
                 });
@@ -429,19 +455,33 @@ module.exports = function(app, passport) {
                         });
 
                     }
-                    console.log("ContentList: " + contentList);
-                    console.log("ContentList.ContentName: " + contentList[0].ContentName);
 
-                    res.render('display.ejs', {
-                        DeviceID: deviceID,
-                        UserID: userID,
-                        DeviceName: deviceName,
-                        DeviceState: deviceState,
-                        Description: description,
-                        Image: image,
-                        NotificationList: notificationList,
-                        ContentList: contentList
-                    });
+                    if (deviceType == 'Video') {
+                        res.render('display.ejs', {
+                            DeviceID: deviceID,
+                            UserID: userID,
+                            DeviceName: deviceName,
+                            DeviceState: deviceState,
+                            Description: description,
+                            Image: image,
+                            NotificationList: notificationList,
+                            ContentList: contentList
+                        });
+                    } else if (deviceType == 'Audio') {
+                        res.render('speaker.ejs', {
+                            DeviceID: deviceID,
+                            UserID: userID,
+                            DeviceName: deviceName,
+                            DeviceState: deviceState,
+                            Description: description,
+                            Image: image,
+                            NotificationList: notificationList,
+                            ContentList: contentList
+                        });
+                    } else {
+                        console.log('Invalid DeviceType');
+                        res.send('Invalid DeviceType');
+                    }
                     
                     serverDB.close();
                 });
@@ -449,10 +489,85 @@ module.exports = function(app, passport) {
         });
     });
 
+    app.get('/getAudio', function(req, res) {
+        console.log('POST /getAudio');
+        console.log('Query: ' + req);
+
+        var UserID = parseInt(req.param('UserID'));
+        var ContentType = req.param('ContentType');
+        var Source = req.param('Source');
+        var SourceUserName = req.param('SourceUserName');
+        var SourcePassword = req.param('SourcePassword');
+        var DeviceID = parseInt(req.param('DeviceID'));
+        var contentList = [];
+        jsonData = {
+            'type': 'getContent',
+            'source_user_name': SourceUserName,
+            'source_password': SourcePassword
+        };
+        console.log('DeviceID: ' + DeviceID);
+        console.log('==================== MAP =============');
+        // console.log(connMap);
+        console.log('LOG: ' + UserID + ' ' + ContentType + ' ' + Source);
+        console.log('======================================');
+        connMap[DeviceID].send(JSON.stringify(jsonData));
+
+        // wait for 500ms
+        setTimeout(function() {
+            serverDB = new sqlite3.Database(serverDBPath);        
+            // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
+            // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+            serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
+                UserID, ContentType, Source,
+                function(err, rows) {
+                    // console.log('/getAudio return values: ' + rows);
+                    if (!err) {
+                        rows.forEach(function(row) {
+                            contentList.push({
+                                'ContentID': row.ContentID,
+                                'ContentName': row.ContentName,
+                                'URL': row.ContentURL
+                            });
+                        });
+                    } else {
+                        console.log('Error: ' + err);
+                    }
+                    res.send(contentList);
+                }
+            );
+            serverDB.close();
+        }, 500);
+        // serverDB = new sqlite3.Database(serverDBPath);        
+        // // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
+        // // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+        // serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
+        //     UserID, ContentType, Source,
+        //     function(err, rows) {
+        //         console.log('/getAudio return values: ' + rows);
+        //         if (!err) {
+        //             rows.forEach(function(row) {
+        //                 contentList.push({
+        //                     'ContentID': row.ContentID,
+        //                     'ContentName': row.ContentName,
+        //                     'URL': row.ContentURL
+        //                 });
+        //             });
+        //         } else {
+        //             console.log('Error: ' + err);
+        //         }
+        //         res.send(contentList);
+        //     }
+        // );
+        // serverDB.close();
+    });
+
     app.get('/profile', isLoggedIn, function(req, res) {
         serverDB = new sqlite3.Database(serverDBPath);
         var userID;
         var userName = req.user.username;
+        console.log('GET /profile');
+        console.log('userName: ' + userName);
+
         var notificationList = [];
         var deviceList = [];
 
@@ -469,8 +584,6 @@ module.exports = function(app, passport) {
             }
             userRows.forEach(function(row) {
                 userID = row.UserID;
-                console.log('userID');
-                console.log(userID);
             });
             serverDB.all('select NotificationID, DeviceID, NotificationType, Description from Notification where UserID = ?', userID, function(err, notificationRows) {
                 if (err) {
@@ -490,10 +603,8 @@ module.exports = function(app, passport) {
                         NotificationType: row.NotificationType,
                         Description: row.Description});
                 });
-                console.log('notificationList');
-                console.log(notificationList);
 
-                serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
+                serverDB.all('select DeviceID, DeviceType, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
                     if (err) {
                         res.render('profile.ejs', {
                             UserID: userID,
@@ -505,19 +616,22 @@ module.exports = function(app, passport) {
                         return;
                     }
                     deviceRows.forEach(function(row) {
+                        var image;
+                        if (row.DeviceType == 'Video') {
+                            image = 'http://i.kinja-img.com/gawker-media/image/upload/t_original/dckiksbsuyomwbs1paqs.png';
+                        } else if (row.DeviceType == 'Audio') {
+                            image = 'http://assets.store.hp.com/hpusstore/images/3pp_573X430/ge5916.png';
+                        } else {
+                            image = 'http://larics.rasip.fer.hr/wp-content/uploads/2016/04/default-placeholder.png';
+                        }
                         deviceList.push({
                             DeviceID: row.DeviceID,
                             DeviceName: row.DeviceName,
-                            Image: row.Image,
+                            Image: image,
                             Description: row.Description});
                     });
-                    console.log('deviceList');
-                    console.log(deviceList);
 
                     // successful
-                    console.log('/profile successful');
-                    console.log(userID);
-                    console.log(notificationList);
                     res.render('profile.ejs', {
                         UserID: userID,
                         UserName: userName,
@@ -534,6 +648,9 @@ module.exports = function(app, passport) {
     app.get('/notification', isLoggedIn, function(req, res) {
         serverDB = new sqlite3.Database(serverDBPath);
         var query = req._parsedUrl.query;
+        console.log('GET /notification');
+        console.log('Query: ' + query);
+
         var parts = query.split('&');
         var tmpParts;
         var notificationID;
@@ -554,26 +671,20 @@ module.exports = function(app, passport) {
         var deviceName;
         var deviceState;
         var description;
+        var deviceType;
         var image;
         // var deviceType;
         var notificationList = [];
         var contentList = [];
         var deviceID;
 
-        console.log('notification');
-        console.log(notificationID);
-        console.log(action);
-        console.log(type);
-
         serverDB.all('select DeviceID from Notification where NotificationID = ?', notificationID, function(err, rows) {
             if (!err) {
                 rows.forEach(function(row) {
                     deviceID = row.DeviceID;
-                    console.log('deviceID');
-                    console.log(deviceID);
                 });
             }
-            serverDB.all('select UserID, DeviceName, DeviceState, SoftwareUpdateURL, Description, Image from Device where DeviceID = ?', deviceID, function(err, deviceRows) {
+            serverDB.all('select UserID, DeviceName, DeviceState, SoftwareUpdateURL, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRows) {
                 if (!err) {
                     deviceRows.forEach(function(row) {
                         userID = row.UserID;
@@ -582,6 +693,7 @@ module.exports = function(app, passport) {
                         description = row.Description;
                         image = row.Image;
                         softwareUpdateURL = row.SoftwareUpdateURL;
+                        deviceType = row.deviceType;
                     });
                 }
 
@@ -598,27 +710,42 @@ module.exports = function(app, passport) {
 
                     if (type == 'SoftwareUpdate') {
                         if (action == 'cancel') {
-                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                            });
+                            // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            // });
                             res.json({'status': 'OK'});
                         } else if (action == 'details') {
-                            console.log(userID);
-
-                            res.render('display.ejs', {
-                                DeviceID: deviceID,
-                                UserID: userID,
-                                DeviceName: deviceName,
-                                DeviceState: deviceState,
-                                Description: description,
-                                Image: image,
-                                NotificationList: notificationList,
-                                ContentList: contentList
-                            });
+                            if (deviceType == 'Video') {
+                                res.render('display.ejs', {
+                                    DeviceID: deviceID,
+                                    UserID: userID,
+                                    DeviceName: deviceName,
+                                    DeviceState: deviceState,
+                                    Description: description,
+                                    Image: image,
+                                    NotificationList: notificationList,
+                                    ContentList: contentList
+                                });
+                            } else if (deviceType == 'Audio') {
+                                res.render('speaker.ejs', {
+                                    DeviceID: deviceID,
+                                    UserID: userID,
+                                    DeviceName: deviceName,
+                                    DeviceState: deviceState,
+                                    Description: description,
+                                    Image: image,
+                                    NotificationList: notificationList,
+                                    ContentList: contentList
+                                });
+                            } else {
+                                console.log('Invalid DeviceType');
+                                res.send('Invalid DeviceType');
+                            }
                         } else if (action == 'agree') {
                             // transmit file to client
+
                             var content = base64_encode(softwareUpdateURL);
                             var jsonData = {
-                                'type': 'updata',
+                                'type': 'update',
                                 'action': undefined,
                                 'url': undefined,
                                 'source': undefined,
@@ -626,30 +753,45 @@ module.exports = function(app, passport) {
                                 'software_name': 'update'
                             };
                             // should use device ID as key
-                            connMap['Lehao'].send(JSON.stringify(jsonData));
-                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                            });
+                            // connMap['Lehao'].send(JSON.stringify(jsonData));
+                            connMap[deviceID].send(JSON.stringify(jsonData));
+                            // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            // });
                             res.json({'status': 'OK'});
                         }
                     } else {
                         // VideoListUpdate / AudioListUpdate
                         if (action == 'cancel') {
-                            serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                            });
+                            // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                            // });
                             res.json({'status': 'OK'});
                         } else if (action == 'details') {
-                            console.log(userID);
-
-                            res.render('display.ejs', {
-                                DeviceID: deviceID,
-                                UserID: userID,
-                                DeviceName: deviceName,
-                                DeviceState: deviceState,
-                                Description: description,
-                                Image: image,
-                                NotificationList: notificationList,
-                                ContentList: contentList
-                            });
+                            if (deviceType == 'Video') {
+                                res.render('display.ejs', {
+                                    DeviceID: deviceID,
+                                    UserID: userID,
+                                    DeviceName: deviceName,
+                                    DeviceState: deviceState,
+                                    Description: description,
+                                    Image: image,
+                                    NotificationList: notificationList,
+                                    ContentList: contentList
+                                });
+                            } else if (deviceType == 'Audio') {
+                                res.render('speaker.ejs', {
+                                    DeviceID: deviceID,
+                                    UserID: userID,
+                                    DeviceName: deviceName,
+                                    DeviceState: deviceState,
+                                    Description: description,
+                                    Image: image,
+                                    NotificationList: notificationList,
+                                    ContentList: contentList
+                                });
+                            } else {
+                                console.log('Invalid DeviceType');
+                                res.send('Invalid DeviceType');
+                            }
                         }
                     }
 
@@ -662,6 +804,11 @@ module.exports = function(app, passport) {
 
     app.get('/checkUpdate', isLoggedIn, function(req, res) {
         var query = req._parsedUrl.query;
+        console.log('GET /checkUpdate');
+        console.log('Query: ' + query);
+        // if (query == null) {
+        //     return;
+        // }
         var parts = query.split('=');
         var userID = parts[1];
         var notificationList = [];
@@ -688,12 +835,17 @@ module.exports = function(app, passport) {
     // LOGOUT ==============================
     // =====================================
     app.get('/logout', function(req, res) {
+        console.log('GET /logout');
+
         req.logout();
         res.redirect('/');
     });
 
     app.get('/addDevice',isLoggedIn, function(req, res) {
-        res.render('deviceAdd.ejs',{url : configDB.url});
+        console.log('GET /addDevice');
+
+        res.render('qr_scanner.ejs');
+        //res.render('deviceAdd.ejs',{url : configDB.url});
     });
 
     // process the signup form
@@ -717,7 +869,10 @@ module.exports = function(app, passport) {
 
     // process QR-code
     app.get('/QRcode/',isLoggedIn, function (req, res) {
+        console.log('GET /QRcode');
+
         var peer_id = req.query.PeerId;
+
         var noob = req.query.Noob;
         var hoob = req.query.Hoob;
         var queryObject = url.parse(req.url,true).query;
@@ -725,39 +880,57 @@ module.exports = function(app, passport) {
 
         if(len != 3 || peer_id == undefined || noob == undefined || hoob == undefined)
         {
-         req.flash('profileMessage','Wrong query String! Please try again with proper Query!!' );
-         res.redirect('/profile');
-     }else if(noob.length != 22 || hoob.length != 22){
+            console.log('CASE I');
+            req.flash('profileMessage','Wrong query String! Please try again with proper Query!!' );
+            res.redirect('/profile');
+        }else if(noob.length != 22 || hoob.length != 22){
+            console.log('CASE II');
 
-         console.log("Updating Error!!!" + peer_id);
-         db = new sqlite3.Database(conn_str);
+            console.log("Updating Error!!!" + peer_id);
+            db = new sqlite3.Database(conn_str);
 
-         db.serialize(function() {
-           var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, errorCode = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
-           stmt.run(1234,"","",3,req.user.username,2,peer_id);
-           stmt.finalize();
-       });
+        db.serialize(function() {
+            var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, errorCode = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
+            stmt.run(1234,"","",3,req.user.username,2,peer_id);
+            stmt.finalize();
+        });
 
-         db.close();
-         req.flash('profileMessage','Invalid Data');
-         res.redirect('/profile');
+            db.close();
+            req.flash('profileMessage','Invalid Data');
+            res.redirect('/profile');
 
-     }else{
+        }else{
+            console.log('CASE III, correct');
+            // correct information
+            db = new sqlite3.Database(conn_str);
+            db.serialize(function() {
+                var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
+                stmt.run(1234,noob,hoob,req.user.username,2,peer_id);
+                stmt.finalize();
+            });
+            db.close();
+            req.flash('profileMessage','Received Successfully');
+            res.redirect('/profile');
 
-         db = new sqlite3.Database(conn_str);
-
-         db.serialize(function() {
-           var stmt = db.prepare("UPDATE peers_connected SET OOB_RECEIVED_FLAG = ?, Noob = ?, Hoob = ?, userName = ?, serv_state = ? WHERE PeerID = ?");
-           stmt.run(1234,noob,hoob,req.user.username,2,peer_id);
-           stmt.finalize();
-       });
-
-         db.close();
-         req.flash('profileMessage','Received Successfully');
-         res.redirect('/profile');
-     }
+            console.log('prepare to add uninitialized device into database')
+            serverDB = new sqlite3.Database(serverDBPath);
+            serverDB.run(
+                'insert into Device (ConnectionID, UserID) \
+                values(?, ?)',
+                peer_id, 1,
+                function(err, row) {
+                    if (err) {
+                        console.log('ERROR: ' + err);
+                    }
+                    serverDB.close();
+                }
+            );
+        }
  });
+
     app.get('/stateUpdate', function(req, res) {
+        console.log('GET /stateUpdate');
+
         var peer_id = req.query.PeerId;
         var state = req.query.State;
         var queryObject = url.parse(req.url,true).query;
@@ -767,22 +940,22 @@ module.exports = function(app, passport) {
         {
          console.log("Its wrong Query");
          res.json({"error":"Wrong Query."});
-     }else{
-         console.log('req received');
-         db = new sqlite3.Database(conn_str);
-         db.get('SELECT serv_state,errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
-
-            db.close();
-            if (!row){res.json({"state": "No record found.","state_num":"0"});}
-            else if(row.errorCode) { res.json({"state":error_info[parseInt(row.errorCode)], "state_num":"0"}); console.log(row.errorCode) }
-            else if(parseInt(row.serv_state) == parseInt(state)) {res.json({"state":""});}
-            else {res.json({"state": state_array[parseInt(row.serv_state)], "state_num": row.serv_state});}
-        });
-     }
- });
+         }else{
+             console.log('req received');
+             db = new sqlite3.Database(conn_str);
+             db.get('SELECT serv_state,errorCode FROM peers_connected WHERE PeerID = ?', peer_id, function(err, row) {
+                db.close();
+                if (!row){res.json({"state": "No record found.","state_num":"0"});}
+                else if(row.errorCode) { res.json({"state":error_info[parseInt(row.errorCode)], "state_num":"0"}); console.log(row.errorCode) }
+                else if(parseInt(row.serv_state) == parseInt(state)) {res.json({"state":""});}
+                else {res.json({"state": state_array[parseInt(row.serv_state)], "state_num": row.serv_state});}
+            });
+        }
+    });
 
     app.get('/deleteDevice', function(req, res) {
-        //console.log(req);
+        console.log('GET /deleteDevice');
+
         var peer_id = req.query.PeerId;
         var queryObject = url.parse(req.url,true).query;
         var len = Object.keys(queryObject).length;
