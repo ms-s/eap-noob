@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./head %>
+    <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+</head>
+<style>
+    button.login-button {
+        margin: auto;
+        width: 300px;
+    }
+</style>
+<script>
+    var users = <%- JSON.stringify(Users) %>;
+    console.log(users[0].UserID);
+</script>
+<body onload="load()">
+<!-- Always shows a header, even in smaller screens. -->
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--no-drawer-button">
+    <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+            <div style="margin-right: 10px">
+                <button id="back-button" class="mdl-button mdl-js-button"
+                        style="padding-left: 0px; color: #ffffff;" onclick="clickBack()">
+                    <i class="material-icons">keyboard_arrow_left</i>
+                    Back
+                </button>
+            </div>
+
+            <!-- Title -->
+            <span class="mdl-layout-title">Manage Users</span>
+
+            <!-- Add spacer, to align navigation to the right -->
+            <div class="mdl-layout-spacer"></div>
+            <!-- Navigation. We hide it in small screens. -->
+            <!--<button id="demo-menu-lower-right"
+                    class="mdl-button mdl-js-button mdl-button--icon">
+                <i class="material-icons">add</i>
+            </button>
+            <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
+                for="demo-menu-lower-right">
+                <li class="mdl-menu__item" onclick="gotoAddDevice()">Add Devices</li>
+                <li class="mdl-menu__item" onclick="gotoLogout()">Log Out</li>
+            </ul>-->
+        </div>
+    </header>
+    <main class="mdl-layout__content">
+        <div class="page-content">
+            <div class="mdl-grid" id="message">
+            </div>
+
+                <div class="mdl-grid" style="width: 300px;">
+                    <label for="usr">User Name:</label>
+                    <input type="text" class="form-control" id="usr">
+                </div>
+
+                <div class="mdl-grid" style="width: 300px;">
+                    <label>Permission Level: </label>
+                    <select class="form-control" id="permission">
+                        <option>Can Authorize Others</option>
+                        <option>Only Can Control</option>
+                    </select>
+                </div>
+
+                <div class="mdl-grid" style="width: 300px;">
+                    <button type="submit"
+                            class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored login-button"
+                            onclick="clickAdd()">
+                        Add
+                    </button>
+                </div>
+
+            <hr>
+
+            <h5 style="margin-left: 12px; margin-bottom: 4px">
+                Authorized Users:
+            </h5>
+
+            <div id="auth-users">
+
+            </div>
+        </div>
+    </main>
+
+    <% include ./footer-devices.ejs %>
+</div>
+</body>
+<script>
+
+    function load() {
+        console.log("a");
+
+        var t = "";
+        if (users.length > 0) {
+
+            t += "<div class=\"demo-list-action mdl-list\">";
+
+            users.forEach(function (user) {
+                t += "<div class=\"mdl-list__item\">";
+                t += "<span class=\"mdl-list__item-primary-content\">";
+                t += "<span>" + user.UserName + "</span>";
+                t += "</span>";
+                t += "<a class=\"mdl-list__item-secondary-action\"";
+                t += "user-id=\"" + user.UserID + "\" onclick=\"deleteUser(this)\">";
+                t += "<i class=\"material-icons\">delete</i>";
+                t += "</a>";
+                t += "</div>";
+            });
+
+            t += "</div>";
+        }
+        console.log(t);
+
+        document.getElementById("auth-users").innerHTML = t;
+    }
+
+
+    function showUsers() {
+        var txt = "";
+
+        if (users.length > 0) {
+            txt += "<div class=\"demo-list-action mdl-list\">";
+            users.forEach(function (user) {
+                txt += "<div class=\"mdl-list__item\">";
+                txt += "<span class=\"mdl-list__item-primary-content\">";
+                txt += "<span>" + user.UserName + "</span>";
+                txt += "</span>";
+                txt += "<a class=\"mdl-list__item-secondary-action\"";
+                txt += "user-id=\"" + user.UserID + "\" onclick=\"deleteUser(this)\">";
+                txt += "<i class=\"material-icons\">delete</i>";
+                txt += "</a>";
+                txt += "</div>";
+            });
+            txt += "</div>";
+        }
+
+        document.getElementById("auth-users").innerHTML = txt;
+    }
+
+    function deleteUser(button) {
+        var userID = "";
+        console.log("abc");
+
+        users.forEach(function(user) {
+            console.log(user.UserID);
+            console.log(parseInt(button.getAttribute("user-id")))
+            if (user.UserID === parseInt(button.getAttribute("user-id"))) {
+                userID = user.UserID;
+                console.log(userID);
+                users.splice(users.indexOf(user), 1);
+            }
+        });
+
+        showUsers();
+
+        var xhttp = new XMLHttpRequest();
+        var url = "/revokeAuthUser?DeviceID=" + "<%=DeviceID%>" + "&UserID=" + userID;
+        xhttp.open("POST", url, true);
+        xhttp.send();
+    }
+
+
+    function clickBack() {
+        window.location = "/device?deviceID=" + "<%=DeviceID%>" + "&userID=" + "<%=UserID%>";
+    }
+
+    function clickAdd() {
+        var userName = document.getElementById("usr").value;
+        var permission = document.getElementById("permission").value;
+        var permissionValue = 0;
+
+        console.log(userName);
+        console.log(permission);
+
+        if (permission === "Can Authorize Others") {
+            permissionValue = 0;
+        } else {
+            permissionValue = 1;
+        }
+
+        var xhttp = new XMLHttpRequest();
+        var url = "/addAuthUser?DeviceID=" + "<%=DeviceID%>" + "&Username=" + userName
+            + "&Permission=" + permissionValue;
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var txt = "";
+                var response = JSON.parse(this.responseText);
+                /*var response = {
+                    Status: 1,
+                    UserID: 2
+                };*/
+
+                log.console(response.Status);
+                log.console(response.UserID);
+
+                if (response.Status == 0) {
+                    // Succeeded
+                    users.push({UserID: response.UserID, UserName: userName});
+                    showUsers();
+
+                } else if (response.Status == 1) {
+                    // Failed
+                    txt = "The user is not exist";
+                    document.getElementById("message").innerHTML = txt;
+                } else {
+                    txt = "Error!";
+                    document.getElementById("message").innerHTML = txt;
+                }
+            }
+        }
+        xhttp.open("POST", url, true);
+        xhttp.send();
+    }
+
+    function gotoDevices() {
+        window.location = "/devices?userID=<%=UserID%>";
+    }
+
+    function gotoHome() {
+        window.location = "/profile";
+    }
+
+</script>
+
+</html>

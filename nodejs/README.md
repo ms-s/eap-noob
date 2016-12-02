@@ -205,10 +205,11 @@ Return list of all the notifications
 ```
 
 ```
-GET
+GET✅
 /authorizedUser?DeviceID=[]&UserID=[]
 {
 	DeviceID: deviceID,
+	UserID: userID,
 	// except for himself
 	Users: [{
 		UserID: id,
@@ -218,16 +219,17 @@ GET
 ```
 
 ```
-POST
+POST✅
 /revokeAuthUser?DeviceID=[]&UserID=[]
 	delete it in database
 ```
 
 ```
-POST
+POST✅
 /addAuthUser?DeviceID=[]&Username=[]&Permission=[]
 {
 	Status: 0 - Success, 1 - User Not Exists, 2 - Failure
+	UserID: userID
 }
 ```
 
