@@ -1,5 +1,6 @@
 // app/routes.js
 var common = require('../common');
+var connMap = common.connMap;
 var GlobalDeviceID = 0;
 
 var fs = require('fs');
@@ -830,7 +831,7 @@ module.exports = function(app, passport) {
         serverDB.close();
     });
 
-    app.post('/revokeAuthUser', function(req, res) {
+    app.get('/revokeAuthUser', isLoggedIn, function(req, res) {
         var deviceID;
         var userID;
         var tmpParts;
@@ -854,7 +855,7 @@ module.exports = function(app, passport) {
         serverDB.close();     
     });
 
-    app.post('/addAuthUser', function(req, res) {
+    app.get('/addAuthUser', isLoggedIn, function(req, res) {
         var deviceID;
         var userName;
         var userID;
