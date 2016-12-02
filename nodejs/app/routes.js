@@ -803,6 +803,7 @@ module.exports = function(app, passport) {
         serverDB.all('select U.UserID, U.UserName from User as U, AuthorizedUser as A\
             where U.UserID = A.UserID and A.DeviceID = ?',
             deviceID, function(err, rows) {
+                console.log('/authorizedUser rows from join: ' + rows);
                 if (!err) {
                     rows.forEach(function(row) {
                         if (row.UserID != userID) {
@@ -815,7 +816,10 @@ module.exports = function(app, passport) {
                 } else {
                     console.log('ERROR in select in /authorizedUser: ' + err);
                 }
-
+                console.log('Return value');
+                console.log('\tDeviceID: ' + deviceID);
+                console.log('\tUserID: ' + userID);
+                console.log('\tUsers: ' + userList);
                 res.render('auth-device.ejs', {
                     DeviceID: deviceID,
                     UserID: userID,
