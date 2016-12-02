@@ -120,23 +120,20 @@ var server = ws.createServer(property, function (conn) {
         }
     });
 
-    // // for DEBUG use
-    // var deviceID;
-    // serverDB = new sqlite3.Database(serverDBPath);
-    // serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
+    var deviceID;
+    serverDB = new sqlite3.Database(serverDBPath);
+    serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
         
-    //     deviceID = row.DeviceID;
-    //     console.log('DeviceID: ' + deviceID);
-    //     if (!err) {
-    //         if (deviceID != undefined) {
-    //             connMap[deviceID] = conn;
-    //         }
-    //     } else {
-    //         console.log('ERROR: ' + err);
-    //     }
-    // });
-    // connMap['Lehao'] = conn;
-
+        deviceID = row.DeviceID;
+        console.log('DeviceID: ' + deviceID);
+        if (!err) {
+            if (deviceID != undefined) {
+                connMap[deviceID] = conn;
+            }
+        } else {
+            console.log('ERROR: ' + err);
+        }
+    });
 }).listen(9000);
 
 // set up our express application
