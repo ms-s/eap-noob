@@ -447,7 +447,7 @@ module.exports = function(app, passport) {
 
     app.get('/getAudio', function(req, res) {
         console.log('POST /getAudio');
-        console.log('Query: ' + req);
+        // console.log('Query: ' + req);
 
         var UserID = parseInt(req.param('UserID'));
         var ContentType = req.param('ContentType');
@@ -519,7 +519,7 @@ module.exports = function(app, passport) {
         var userID;
         var userName = req.user.username;
 
-        console.log(req);
+        // console.log(req);
 
         console.log('GET /profile');
         console.log('userName: ' + userName);
