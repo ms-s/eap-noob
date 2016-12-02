@@ -786,6 +786,7 @@ module.exports = function(app, passport) {
     });
 
     app.get('/authorizedUser', isLoggedIn, function(req, res) {
+        var query = req._parsedUrl.query;
         var parts = query.split('&');
         var tmpParts;
         
@@ -812,7 +813,7 @@ module.exports = function(app, passport) {
                         }
                     });
                 }
-                res.json({
+                res.render('auth-device.ejs', {
                     DeviceID: deviceID,
                     UserID: userID,
                     Users: userList

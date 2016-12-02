@@ -324,7 +324,7 @@
 
     function clickVolumeUpButton() {
         var xhttp = new XMLHttpRequest();
-        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=audio&URL=&source=spotify"
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL=&source=spotify"
             + "&action=up";
         xhttp.open("POST", url, true);
         xhttp.send();
@@ -332,7 +332,7 @@
 
     function clickVolumeDownButton() {
         var xhttp = new XMLHttpRequest();
-        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=audio&URL=&source=spotify"
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL=&source=spotify"
             + "&action=down";
         xhttp.open("POST", url, true);
         xhttp.send();

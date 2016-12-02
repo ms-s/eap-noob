@@ -2,7 +2,7 @@
 <configuration>
     <Type>Metadata</Type>>
     <DeviceName>Samsung Display</DeviceName>
-    <Devicetype>Video</Devicetype>
+    <DeviceType>Video</DeviceType>
     <UpdateSource>update.bin</UpdateSource>
     <DeviceDescription>Connection established</DeviceDescription>
 </configuration>
