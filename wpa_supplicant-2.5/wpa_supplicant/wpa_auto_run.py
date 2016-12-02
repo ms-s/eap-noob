@@ -24,6 +24,7 @@ from selenium.webdriver.chrome.options import Options
 import logging
 import errno
 from socket import error as socket_error
+import xml.etree.ElementTree as ET
 # import _thread
 
 global conf_file
@@ -66,6 +67,8 @@ class Client(WebSocketClient):
                  ssl_options=None, headers=None):
         super(Client, self).__init__(url, protocols, extensions, heartbeat_freq, ssl_options, headers)
         self.driver = None
+        self.volume = 0
+        self.music_status = 'unknown'
 
     def on_connection_state_updated(self, session):
         if session.connection.state is spotify.ConnectionState.LOGGED_IN:
@@ -76,20 +79,13 @@ class Client(WebSocketClient):
 
     def opened(self):
         logger.info("Client is up")
-        device_info = {'Type': 'Metadata', 'DeviceName': 'Samsung Display', 'DeviceType': 'Video',
-                       'UpdateSource': 'update.bin', 'DeviceDescription': 'Connection established'}
+        conf = ET.parse('conf.xml')
+        root = conf.getroot()
+
+        device_info = {child.tag: child.text for child in root}
         device_str = json.dumps(device_info)
         self.send(device_str)
         print "Client is up"
-        # def data_provider():
-        #     for i in range(1, 200, 25):
-        #         yield "#" * i
-
-        # self.send(data_provider())
-
-        # for i in range(0, 200, 25):
-        #     print i
-        #     self.send("*" * i)
 
     def closed(self, code, reason=None):
         logger.info("Closed down %s %s", code, reason)
@@ -101,8 +97,6 @@ class Client(WebSocketClient):
             msg = json.loads(recv_str)
             if self.validate_msg(msg):
                 print msg
-                # self.video_handler(msg)
-                # self.update_handler(msg)
                 if msg['type'] == 'video':
                     self.video_handler(msg)
                 elif msg['type'] == 'audio':
@@ -125,14 +119,18 @@ class Client(WebSocketClient):
         print user_name, passwd
         self.account_login('spotify', user_name, passwd)
         l = self.get_toplist(10)
-        content = {'Type': 'ContentList', 'ContentList': l}
+        content = {'Type': 'ContentList', 'ContentList': l, 'UserID': msg['userID']}
         list_str = json.dumps(content)
         logger.info("List str: %s", list_str)
         self.send(list_str)
 
     def volume_handler(self, msg):
-        volume = msg['action']
-        subprocess.call(["amixer", "-D", "pulse", "sset", "Master", str(int(volume) * 5) + '%'])
+        control = msg['action']
+        if control == 'up':
+            self.volume = max(self.volume + 1, 20)
+        else:
+            self.volume = min(self.volume - 1, 0)
+        subprocess.call(["amixer", "-D", "pulse", "sset", "Master", str(self.volume * 5) + '%'])
 
     def validate_msg(self, msg):
         return True
@@ -141,51 +139,60 @@ class Client(WebSocketClient):
         """ Support playing youtube video.
         """
         print msg
-        target_url = msg['url']
-        action = msg['action']  # play, close
-        source = msg['source']
+        # target_url = msg['url']
+        action = msg['action']  # play, change
 
         if self.driver is None:
             self.driver = webdriver.Chrome(chromedriver, chrome_options=chrome_options)
+        # current_url = self.driver.current_url
+        if action == 'play':
+            target_url = msg['url']
             self.driver.get(target_url)
-            time.sleep(1)
-            fullscreen = self.driver.find_elements_by_class_name('ytp-fullscreen-button')[0]
-            fullscreen.click()
+        elif action == 'change':
+            video_status = self.get_video_status()
+            print video_status
+            logger.info("Change video status")
+            # status: 1 means play, 2 means pause
+            video = self.driver.find_elements_by_class_name('ytp-play-button')[0]
+            video.click()
         else:
-            current_url = self.driver.current_url
-            if current_url != target_url:
-                self.driver.get(target_url)
-            else:
-                video_status = self.get_video_status()
-                print video_status
-                if action == 'play' and video_status != 1:
-                    print "click play"
-                    video = self.driver.find_elements_by_class_name('ytp-play-button')[0]
-                    video.click()
-                elif action == 'pause' and video_status != 2:
-                    print "click pause"
-                    video = self.driver.find_elements_by_class_name('ytp-play-button')[0]
-                    video.click()
-                elif action == 'close':
-                    self.driver.close()
-                    self.driver = None
-                else:
-                    pass
+            logger.warn("[VIDEO_HANDLER] WTF!")
+            # print video_status
+            # if action == 'play' and video_status != 1:
+            #     print "click play"
+            #     video = self.driver.find_elements_by_class_name('ytp-play-button')[0]
+            #     video.click()
+            # elif action == 'pause' and video_status != 2:
+            #     print "click pause"
+            #     video = self.driver.find_elements_by_class_name('ytp-play-button')[0]
+            #     video.click()
+            # elif action == 'close':
+            #     self.driver.close()
+            #     self.driver = None
+            # else:
+            #     pass
 
     def music_hander(self, msg):
         """ Support playing spotify audio
         """
-        target_url = msg['url']
-        action = msg['action']  # play, close
+        # target_url = msg['url']
+        action = msg['action']  # play, change
         source = msg['source']
 
         if source == 'spotify':
             if not hasattr(self, 'session'):
-                self.account_login('spotify')
+                self.account_login('spotify', '***', '****')
             if action == 'play':
+                target_url = msg['url']
                 self.play_music(target_url)
-            elif action == 'pause':
-                self.pause_music()
+                self.music_status = 'play'
+            elif action == 'change':
+                if self.music_status == 'play':
+                    self.pause_music()
+                    self.music_status = 'pause'
+                else:
+                    self.play_music()
+                    self.music_status = 'play'
 
     def update_handler(self, msg):
         content = msg['content']
@@ -204,6 +211,9 @@ class Client(WebSocketClient):
 
     def pause_music(self):
         self.session.player.play(False)
+
+    def resume_music(self):
+        self.session.player.play()
 
     def play_music(self, track_uri):
         if self.session.player.state == spotify.player.PlayerState.UNLOADED:  # 'unloaded':
