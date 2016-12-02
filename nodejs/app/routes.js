@@ -246,7 +246,7 @@ module.exports = function(app, passport) {
                                     Permission: permission
                                 });
                             } else {
-                                console.log('Invalid DeviceType');
+                                console.log('Invalid DeviceType: ' + deviceType);
                                 res.send('Invalid DeviceType');
                             }
                         });
