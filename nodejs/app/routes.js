@@ -989,7 +989,7 @@ module.exports = function(app, passport) {
                     serverDB.run(
                         'insert into Device (DeviceID, ConnectionID, UserID) \
                         values(?, ?, ?)',
-                        common.GlobalDeviceID, peer_id, UserID,
+                        common.GlobalDeviceID, peer_id, userID,
                         function(err, row) {
                             if (err) {
                                 console.log('ERROR: ' + err);
