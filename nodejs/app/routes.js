@@ -1,6 +1,6 @@
 // app/routes.js
 var common = require('../common');
-var connMap = common.connMap;
+var GlobalDeviceID = 0;
 
 var fs = require('fs');
 
@@ -997,7 +997,7 @@ module.exports = function(app, passport) {
                     serverDB.run(
                         'insert into Device (DeviceID, ConnectionID) \
                         values(?, ?)',
-                        common.GlobalDeviceID, peer_id,
+                        GlobalDeviceID, peer_id,
                         function(err, row) {
                             if (err) {
                                 console.log('ERROR: ' + err);
@@ -1005,8 +1005,8 @@ module.exports = function(app, passport) {
                             serverDB.run(
                                 'insert into AuthorizedUser (DeviceID, UserID, Permission) \
                                 values(?, ?, ?)',
-                                common.GlobalDeviceID, userID, 0, function(err, row){
-                                    common.GlobalDeviceID += 1;
+                                GlobalDeviceID, userID, 0, function(err, row){
+                                    GlobalDeviceID += 1;
                                 }
                             );
                         }
