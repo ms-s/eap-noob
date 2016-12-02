@@ -127,9 +127,9 @@ class Client(WebSocketClient):
     def volume_handler(self, msg):
         control = msg['action']
         if control == 'up':
-            self.volume = max(self.volume + 1, 20)
+            self.volume = min(self.volume + 1, 20)
         else:
-            self.volume = min(self.volume - 1, 0)
+            self.volume = max(self.volume - 1, 0)
         subprocess.call(["amixer", "-D", "pulse", "sset", "Master", str(self.volume * 5) + '%'])
 
     def validate_msg(self, msg):
@@ -144,11 +144,15 @@ class Client(WebSocketClient):
 
         if self.driver is None:
             self.driver = webdriver.Chrome(chromedriver, chrome_options=chrome_options)
+            self.first = True
 
         # current_url = self.driver.current_url
         if action == 'play':
             target_url = msg['url']
             self.driver.get(target_url)
+            time.sleep(0.5)
+            fullscreen = self.driver.find_elements_by_class_name('ytp-fullscreen-button')[0]
+            fullscreen.click()
         elif action == 'change':
             video_status = self.get_video_status()
             print video_status
