@@ -155,7 +155,7 @@
 
         var xhttp = new XMLHttpRequest();
         var url = "/revokeAuthUser?DeviceID=" + "<%=DeviceID%>" + "&UserID=" + userID;
-        xhttp.open("POST", url, true);
+        xhttp.open("GET", url, true);
         xhttp.send();
     }
 
@@ -208,7 +208,7 @@
                 }
             }
         }
-        xhttp.open("POST", url, true);
+        xhttp.open("GET", url, true);
         xhttp.send();
     }
 

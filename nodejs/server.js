@@ -124,9 +124,9 @@ var server = ws.createServer(property, function (conn) {
     serverDB = new sqlite3.Database(serverDBPath);
     serverDB.get('select DeviceID from Device where ConnectionID = ?', connectionID, function(err, row) {
         
-        deviceID = row.DeviceID;
         console.log('DeviceID: ' + deviceID);
         if (!err) {
+            deviceID = row.DeviceID;
             if (deviceID != undefined) {
                 connMap[deviceID] = conn;
             }
@@ -197,9 +197,10 @@ serverDB.serialize(function() {
     );');
 
   serverDB.run('create table if not exists AuthorizedUser \
-    (DeviceID integer primary key autoincrement, \
+    (DeviceID integer, \
     UserID integer, \
-    Permission integer);');
+    Permission integer, \
+    primary key (DeviceID, UserID));');
 
   serverDB.close();
 });

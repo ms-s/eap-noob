@@ -1,6 +1,7 @@
 // app/routes.js
 var common = require('../common');
 var connMap = common.connMap;
+var GlobalDeviceID = 0;
 
 var fs = require('fs');
 
@@ -459,6 +460,7 @@ module.exports = function(app, passport) {
         var DeviceID = parseInt(req.param('DeviceID'));
         var contentList = [];
         jsonData = {
+            'userID': UserID,
             'type': 'getContent',
             'source_user_name': SourceUserName,
             'source_password': SourcePassword
@@ -786,6 +788,7 @@ module.exports = function(app, passport) {
     });
 
     app.get('/authorizedUser', isLoggedIn, function(req, res) {
+        var query = req._parsedUrl.query;
         var parts = query.split('&');
         var tmpParts;
         
@@ -799,9 +802,10 @@ module.exports = function(app, passport) {
 
         serverDB = new sqlite3.Database(serverDBPath);
         userList = [];
-        serverDB.run('select U.UserID, U.UserName from User as U, AuthorizedUser as A\
+        serverDB.all('select U.UserID, U.UserName from User as U, AuthorizedUser as A\
             where U.UserID = A.UserID and A.DeviceID = ?',
             deviceID, function(err, rows) {
+                console.log('/authorizedUser rows from join: ' + rows);
                 if (!err) {
                     rows.forEach(function(row) {
                         if (row.UserID != userID) {
@@ -811,8 +815,14 @@ module.exports = function(app, passport) {
                             });
                         }
                     });
+                } else {
+                    console.log('ERROR in select in /authorizedUser: ' + err);
                 }
-                res.json({
+                console.log('Return value');
+                console.log('\tDeviceID: ' + deviceID);
+                console.log('\tUserID: ' + userID);
+                console.log('\tUsers: ' + userList);
+                res.render('auth-device.ejs', {
                     DeviceID: deviceID,
                     UserID: userID,
                     Users: userList
@@ -822,7 +832,7 @@ module.exports = function(app, passport) {
         serverDB.close();
     });
 
-    app.post('/revokeAuthUser', function(req, res) {
+    app.get('/revokeAuthUser', isLoggedIn, function(req, res) {
         var deviceID;
         var userID;
         var tmpParts;
@@ -838,13 +848,15 @@ module.exports = function(app, passport) {
         serverDB = new sqlite3.Database(serverDBPath);
         serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
             if (!err) {
+
+            } else {
                 console.log('ERROR in /revokeAuthUser: ' + err);
             }
         })
         serverDB.close();     
     });
 
-    app.post('/addAuthUser', function(req, res) {
+    app.get('/addAuthUser', isLoggedIn, function(req, res) {
         var deviceID;
         var userName;
         var userID;
@@ -867,7 +879,7 @@ module.exports = function(app, passport) {
         serverDB.get('select * from User where UserName = ?', userName, function(err, row) {
             if (!err) {
                 if (row != undefined) {
-                    erverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
+                    serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
                         if (!err) {
                             userID = userRow.UserID;
                             serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
@@ -991,7 +1003,7 @@ module.exports = function(app, passport) {
                     serverDB.run(
                         'insert into Device (DeviceID, ConnectionID) \
                         values(?, ?)',
-                        common.GlobalDeviceID, peer_id,
+                        GlobalDeviceID, peer_id,
                         function(err, row) {
                             if (err) {
                                 console.log('ERROR: ' + err);
@@ -999,8 +1011,8 @@ module.exports = function(app, passport) {
                             serverDB.run(
                                 'insert into AuthorizedUser (DeviceID, UserID, Permission) \
                                 values(?, ?, ?)',
-                                common.GlobalDeviceID, userID, 0, function(err, row){
-                                    common.GlobalDeviceID += 1;
+                                GlobalDeviceID, userID, 0, function(err, row){
+                                    GlobalDeviceID += 1;
                                 }
                             );
                         }
