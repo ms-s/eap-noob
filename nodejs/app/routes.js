@@ -460,6 +460,7 @@ module.exports = function(app, passport) {
         var DeviceID = parseInt(req.param('DeviceID'));
         var contentList = [];
         jsonData = {
+            'userID': UserID,
             'type': 'getContent',
             'source_user_name': SourceUserName,
             'source_password': SourcePassword
