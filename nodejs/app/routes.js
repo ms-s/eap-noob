@@ -800,7 +800,7 @@ module.exports = function(app, passport) {
 
         serverDB = new sqlite3.Database(serverDBPath);
         userList = [];
-        serverDB.run('select U.UserID, U.UserName from User as U, AuthorizedUser as A\
+        serverDB.all('select U.UserID, U.UserName from User as U, AuthorizedUser as A\
             where U.UserID = A.UserID and A.DeviceID = ?',
             deviceID, function(err, rows) {
                 if (!err) {
@@ -812,7 +812,10 @@ module.exports = function(app, passport) {
                             });
                         }
                     });
+                } else {
+                    console.log('ERROR in select in /authorizedUser: ' + err);
                 }
+
                 res.render('auth-device.ejs', {
                     DeviceID: deviceID,
                     UserID: userID,
