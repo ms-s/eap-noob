@@ -197,9 +197,10 @@ serverDB.serialize(function() {
     );');
 
   serverDB.run('create table if not exists AuthorizedUser \
-    (DeviceID integer primary key autoincrement, \
+    (DeviceID integer, \
     UserID integer, \
-    Permission integer);');
+    Permission integer, \
+    primary key (DeviceID, UserID));');
 
   serverDB.close();
 });
