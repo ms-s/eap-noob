@@ -144,11 +144,17 @@ class Client(WebSocketClient):
 
         if self.driver is None:
             self.driver = webdriver.Chrome(chromedriver, chrome_options=chrome_options)
+            self.first = True
 
         # current_url = self.driver.current_url
         if action == 'play':
             target_url = msg['url']
             self.driver.get(target_url)
+            if self.first:
+                time.sleep(0.5)
+                fullscreen = self.driver.find_elements_by_class_name('ytp-fullscreen-button')[0]
+                fullscreen.click()
+                self.first = False
         elif action == 'change':
             video_status = self.get_video_status()
             print video_status
