@@ -198,7 +198,7 @@ module.exports = function(app, passport) {
         var permission = -1;
 
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.get('select UserID, DeviceName, DeviceState, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
+        serverDB.get('select DeviceName, DeviceState, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
             if (!err) {
                 deviceName = deviceRow.DeviceName;
                 deviceState = deviceRow.DeviceState;
@@ -254,6 +254,8 @@ module.exports = function(app, passport) {
                         console.log('Error: Get permission in /device; error: ' + err);
                     }
                 });
+            } else {
+                console.log('ERROR: select DeviceName, DeviceState, Description, DeviceType, Image in /device');
             }
             serverDB.close();
         });
