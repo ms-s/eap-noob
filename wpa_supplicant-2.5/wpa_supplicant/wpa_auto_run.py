@@ -152,7 +152,11 @@ class Client(WebSocketClient):
         # current_url = self.driver.current_url
         if action == 'play':
             target_url = msg['url']
-            self.driver.get(target_url)
+            try:
+                self.driver.get(target_url)
+            except:
+                self.driver = webdriver.Chrome(chromedriver, chrome_options=chrome_options)
+                self.driver.get(target_url)
             time.sleep(0.5)
             fullscreen = self.driver.find_elements_by_class_name('ytp-fullscreen-button')[0]
             fullscreen.click()
@@ -165,20 +169,6 @@ class Client(WebSocketClient):
             video.click()
         else:
             logger.warn("[VIDEO_HANDLER] WTF!")
-            # print video_status
-            # if action == 'play' and video_status != 1:
-            #     print "click play"
-            #     video = self.driver.find_elements_by_class_name('ytp-play-button')[0]
-            #     video.click()
-            # elif action == 'pause' and video_status != 2:
-            #     print "click pause"
-            #     video = self.driver.find_elements_by_class_name('ytp-play-button')[0]
-            #     video.click()
-            # elif action == 'close':
-            #     self.driver.close()
-            #     self.driver = None
-            # else:
-            #     pass
 
     def music_hander(self, msg):
         """ Support playing spotify audio
