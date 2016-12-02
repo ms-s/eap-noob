@@ -198,7 +198,7 @@ module.exports = function(app, passport) {
         var permission = -1;
 
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.get('select UserID, DeviceName, DeviceState, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
+        serverDB.get('select DeviceName, DeviceState, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
             if (!err) {
                 deviceName = deviceRow.DeviceName;
                 deviceState = deviceRow.DeviceState;
@@ -246,7 +246,7 @@ module.exports = function(app, passport) {
                                     Permission: permission
                                 });
                             } else {
-                                console.log('Invalid DeviceType');
+                                console.log('Invalid DeviceType: ' + deviceType);
                                 res.send('Invalid DeviceType');
                             }
                         });
@@ -254,6 +254,8 @@ module.exports = function(app, passport) {
                         console.log('Error: Get permission in /device; error: ' + err);
                     }
                 });
+            } else {
+                console.log('ERROR: select DeviceName, DeviceState, Description, DeviceType, Image in /device');
             }
             serverDB.close();
         });
@@ -447,7 +449,7 @@ module.exports = function(app, passport) {
 
     app.get('/getAudio', function(req, res) {
         console.log('POST /getAudio');
-        console.log('Query: ' + req);
+        // console.log('Query: ' + req);
 
         var UserID = parseInt(req.param('UserID'));
         var ContentType = req.param('ContentType');
@@ -519,7 +521,7 @@ module.exports = function(app, passport) {
         var userID;
         var userName = req.user.username;
 
-        console.log(req);
+        // console.log(req);
 
         console.log('GET /profile');
         console.log('userName: ' + userName);
@@ -987,9 +989,9 @@ module.exports = function(app, passport) {
                     userID = userRow.UserID;
 
                     serverDB.run(
-                        'insert into Device (DeviceID, ConnectionID, UserID) \
-                        values(?, ?, ?)',
-                        common.GlobalDeviceID, peer_id, UserID,
+                        'insert into Device (DeviceID, ConnectionID) \
+                        values(?, ?)',
+                        common.GlobalDeviceID, peer_id,
                         function(err, row) {
                             if (err) {
                                 console.log('ERROR: ' + err);
@@ -997,7 +999,7 @@ module.exports = function(app, passport) {
                             serverDB.run(
                                 'insert into AuthorizedUser (DeviceID, UserID, Permission) \
                                 values(?, ?, ?)',
-                                common.GlobalDeviceID, UserID, 0, function(err, row){
+                                common.GlobalDeviceID, userID, 0, function(err, row){
                                     common.GlobalDeviceID += 1;
                                 }
                             );
