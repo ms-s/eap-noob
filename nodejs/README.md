@@ -209,6 +209,7 @@ GET
 /authorizedUser?DeviceID=[]&UserID=[]
 {
 	DeviceID: deviceID,
+	UserID: userID,
 	// except for himself
 	Users: [{
 		UserID: id,
@@ -228,6 +229,7 @@ POST
 /addAuthUser?DeviceID=[]&Username=[]&Permission=[]
 {
 	Status: 0 - Success, 1 - User Not Exists, 2 - Failure
+	UserID: userID
 }
 ```
 
