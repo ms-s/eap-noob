@@ -497,16 +497,16 @@
 
     function clickVolumeUpButton() {
         var xhttp = new XMLHttpRequest();
-        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL=&source=youtube"
-            + "&action=up";
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL="
+            + videourlnow + "&source=youtube&action=up";
         xhttp.open("POST", url, true);
         xhttp.send();
     }
 
     function clickVolumeDownButton() {
         var xhttp = new XMLHttpRequest();
-        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL=&source=youtube"
-            + "&action=down";
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL="
+            + videourlnow + "&source=youtube&action=down";
         xhttp.open("POST", url, true);
         xhttp.send();
     }
