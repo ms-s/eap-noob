@@ -997,7 +997,7 @@ module.exports = function(app, passport) {
                             serverDB.run(
                                 'insert into AuthorizedUser (DeviceID, UserID, Permission) \
                                 values(?, ?, ?)',
-                                common.GlobalDeviceID, UserID, 0, function(err, row){
+                                common.GlobalDeviceID, userID, 0, function(err, row){
                                     common.GlobalDeviceID += 1;
                                 }
                             );
