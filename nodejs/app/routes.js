@@ -871,7 +871,7 @@ module.exports = function(app, passport) {
         serverDB.get('select * from User where UserName = ?', userName, function(err, row) {
             if (!err) {
                 if (row != undefined) {
-                    erverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
+                    serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
                         if (!err) {
                             userID = userRow.UserID;
                             serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
