@@ -1,16 +1,16 @@
-<!-- views/pages/index.ejs -->
+<!-- views/pages/display.ejs -->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <% include ./head %>
-    <style>
-        .demo-card-notification.mdl-card {
-            height: 160px;
-        }
-    </style>
     <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
 </head>
+<style>
+    .auth-car.mdl-card {
+        height: 10px;
+    }
+</style>
 <body>
 <!-- Always shows a header, even in smaller screens. -->
 <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--no-drawer-button">
@@ -23,7 +23,7 @@
             <!-- Navigation. We hide it in small screens. -->
             <button id="demo-menu-lower-right"
                     class="mdl-button mdl-js-button mdl-button--icon">
-                <i class="material-icons">more_vert</i>
+                <i class="material-icons">add</i>
             </button>
             <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
                 for="demo-menu-lower-right">
@@ -48,13 +48,6 @@
                         </div>
                         <div class="mdl-card__supporting-text">
                             <p style="margin-bottom: 8px"><%=Description%></p>
-                            <!--<p style="margin-bottom: 8px">
-                                <%//if(DeviceState === "connected") {%>
-                                    Connection State: connected
-                                <%//} else {%>
-                                    Connection State: disconnected
-                                <%//}%>
-                            </p>-->
                         </div>
                     </div>
                 </div>
@@ -130,34 +123,62 @@
                                 </button>
                             </li>
 
-                            <li class="mdl-list__item" id="nowPlaying">NOW PLAYING: </li>
+                            <!--<li class="mdl-list__item" id="nowPlaying">NOW PLAYING: </li>-->
                             <li class="mdl-list__item">
-                                <div style="margin-left:auto; margin-right:auto">
-                                    <button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, true)" id="skipPrevious" disabled>
+                                <div style="margin-right: auto; margin-left: auto;">
+                                    <!--<button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, true)" id="skipPrevious" disabled>
                                         <i class="material-icons">skip_previous</i>
-                                    </button>
-                                    <button id="play-button" class="mdl-button mdl-js-button mdl-button--icon" onclick="playVideo(this, false)" disabled>
+                                    </button>-->
+                                    <button id="play-button" class="mdl-button mdl-js-button mdl-js-ripple-effect" onclick="clickPlayResumeButton()" disabled>
                                         <i class="material-icons">play_arrow</i>
+                                        /
+                                        <i class="material-icons">pause</i>
                                     </button>
-                                    <button class="mdl-button mdl-js-button mdl-button--icon" id="skipNext" onclick="skip(this, false)" disabled>
+
+
+                                    <!--<button class="mdl-button mdl-js-button mdl-button--icon" id="skipNext" onclick="skip(this, false)" disabled>
                                         <i class="material-icons">skip_next</i>
-                                    </button>
+                                    </button>-->
                                 </div>
+
                             </li>
                             <li class="mdl-list__item">
-                                <div style="margin-left:auto; margin-right:auto">
-                                    <i class="material-icons">volume_up</i>
-                                </div>
+                                    <div style="margin-left: auto; margin-right: auto;">
+                                        <i class="material-icons">volume_up</i>
+                                    </div>
+                                    <div style="margin-left: auto; margin-right: auto;">
+                                        <button id="volume-up-button" class="mdl-button mdl-js-button mdl-button--icon"
+                                                onclick="clickVolumeUpButton()" disabled>
+                                            <i class="material-icons">add</i>
+                                        </button>
+                                    </div>
+                                    <div style="margin-left: auto; margin-right: auto;">
+                                        <button id="volume-down-button" class="mdl-button mdl-js-button mdl-button--icon"
+                                                onclick="clickVolumeDownButton()" disabled>
+                                            <i class="material-icons">remove</i>
+                                        </button>
+                                    </div>
                             </li>
-                            <li>
+                            <!--<li>
                                 <input class="mdl-slider mdl-js-slider" type="range" min="0" max="20" value="0"
                                        tabindex="0" id="volumeSlider" oninput="clickSlider(this.value)" disabled>
-                            </li>
+                            </li>-->
                         </ul>
                         <ul class="mdl-list" id="videoContents">
                         </ul>
                     </div>
                 </div>
+
+                <% if (Permission == 0) { %>
+                    <div class="mdl-cell mdl-cell--4-col">
+                        <div class="auth-card mdl-card mdl-shadow--2dp" style="width:100%; min-height: 10px">
+                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;"
+                                    onclick="gotoAuthUserPage()">
+                                Authenticate Users
+                            </button>
+                        </div>
+                    </div>
+                <% } %>
             </div>
         </div>
     </main>
@@ -171,26 +192,23 @@
     var videonamenow = ""
     var action="pause" // play/pause
 
+    function gotoAuthUserPage() {
+        window.location = "/authorizedUser?DeviceID=<%=DeviceID%>&UserID=<%=UserID%>";
+    }
+
     googleApiClientReady = function() {
         gapi.auth.init(function() {
             //window.setTimeout(checkAuth, 1);
         });
     }
 
+    // Deprecated
     function clickSlider(value) {
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL="
                 + videourlnow + "&source=youtube&action=" + value;
         xhttp.open("POST", url, true)
         xhttp.send()
-    }
-
-    function gotoDevices() {
-        window.location = "/devices?userID=<%=UserID%>";
-    }
-
-    function gotoHome() {
-        window.location = "/profile";
     }
 
     function notificationAction(button, notificationID, action, type) {
@@ -350,7 +368,7 @@
                 txt += "<span class='mdl-list__item-secondary-content'> " +
                         "<a class='mdl-list__item-secondary-action' value-name='" +
                         video['ContentName'].replace('\'', '') +
-                        "'value-url='" + video['VideoURL'].replace('\'', '') + "' onclick='playVideo(this, true)'>";
+                        "'value-url='" + video['VideoURL'].replace('\'', '') + "' onclick='playVideoStateless(this)'>";
                 txt += "<i class='material-icons'>keyboard_arrow_right</i>";
                 txt += "</a></span></li>";
 
@@ -363,14 +381,15 @@
     }
 
     function showControlPad() {
-        document.getElementById("skipPrevious").disabled = false;
+        document.getElementById("volume-up-button").disabled = false;
         document.getElementById("play-button").disabled = false;
-        document.getElementById("skipNext").disabled = false;
-        document.getElementById("volumeSlider").disabled = false;
+        document.getElementById("volume-down-button").disabled = false;
+        //document.getElementById("volumeSlider").disabled = false;
         document.getElementById("search").disabled = false;
         document.getElementById("search-icon").disabled = false;
     }
 
+    // Deprecated
     function skip(buttion, isPrevious) {
         var num = 0;
         var videoname = "";
@@ -414,6 +433,7 @@
         xhttp.send()
     }
 
+    // Deprecated
     function playVideo(button, bylist) {
         action = "play"
         if (ContentList.length > 0) {
@@ -458,11 +478,44 @@
         xhttp.send()
     }
 
+    function playVideoStateless(button) {
+        var videourl = button.getAttribute("value-url");
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL=" + videourl + "&source="
+            + "youtube&action=play";
+        xhttp.open("POST", url, true);
+        xhttp.send();
+    }
+
+    function clickPlayResumeButton() {
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL=&source=youtube"
+            + "&action=change";
+        xhttp.open("POST", url, true);
+        xhttp.send();
+    }
+
+    function clickVolumeUpButton() {
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL=&source=youtube"
+            + "&action=up";
+        xhttp.open("POST", url, true);
+        xhttp.send();
+    }
+
+    function clickVolumeDownButton() {
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=video&URL=&source=youtube"
+            + "&action=down";
+        xhttp.open("POST", url, true);
+        xhttp.send();
+    }
+
     function gotoDevices() {
         window.location = "/devices?userID=<%=UserID%>";
     }
 
-    function gotohome() {
+    function gotoHome() {
         window.location = "/profile";
     }
 

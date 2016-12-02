@@ -518,6 +518,9 @@ module.exports = function(app, passport) {
         serverDB = new sqlite3.Database(serverDBPath);
         var userID;
         var userName = req.user.username;
+
+        console.log(req);
+
         console.log('GET /profile');
         console.log('userName: ' + userName);
 
@@ -780,6 +783,116 @@ module.exports = function(app, passport) {
         });
     });
 
+    app.get('/authorizedUser', isLoggedIn, function(req, res) {
+        var parts = query.split('&');
+        var tmpParts;
+        
+        var deviceID;
+        var userID;
+
+        tmpParts = parts[0].split('=');
+        deviceID = parseInt(tmpParts[1]);
+        tmpParts = parts[1].split('=');
+        userID = parseInt(tmpParts[1]);
+
+        serverDB = new sqlite3.Database(serverDBPath);
+        userList = [];
+        serverDB.run('select U.UserID, U.UserName from User as U, AuthorizedUser as A\
+            where U.UserID = A.UserID and A.DeviceID = ?',
+            deviceID, function(err, rows) {
+                if (!err) {
+                    rows.forEach(function(row) {
+                        if (row.UserID != userID) {
+                            userList.push({
+                                UserID: row.UserID,
+                                UserName: row.UserName
+                            });
+                        }
+                    });
+                }
+                res.json({
+                    DeviceID: deviceID,
+                    UserID: userID,
+                    Users: userList
+                });
+            }
+        );
+        serverDB.close();
+    });
+
+    app.post('/revokeAuthUser', function(req, res) {
+        var deviceID;
+        var userID;
+        var tmpParts;
+
+        var query = req._parsedUrl.query;
+        var parts = query.split('&');
+
+        tmpParts = parts[0].split('=');
+        deviceID = parseInt(tmpParts[1]);
+        tmpParts = parts[1].split('=');
+        userID = parseInt(tmpParts[1]);
+
+        serverDB = new sqlite3.Database(serverDBPath);
+        serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
+            if (!err) {
+                console.log('ERROR in /revokeAuthUser: ' + err);
+            }
+        })
+        serverDB.close();     
+    });
+
+    app.post('/addAuthUser', function(req, res) {
+        var deviceID;
+        var userName;
+        var userID;
+        var permission;
+        var tmpParts;
+        var status = 2;
+        var query = req._parsedUrl.query;
+        var parts = query.split('&');
+
+        tmpParts = parts[0].split('=');
+        deviceID = parseInt(tmpParts[1]);
+        tmpParts = parts[1].split('=');
+        userName = tmpParts[1];
+        tmpParts = parts[2].split('=');
+        permission = parseInt(tmpParts[1]);
+
+        // TODO multiple cases? e.g: duplicated insertion of users
+        // first delete, then add?
+        serverDB = new sqlite3.Database(serverDBPath);
+        serverDB.get('select * from User where UserName = ?', userName, function(err, row) {
+            if (!err) {
+                if (row != undefined) {
+                    erverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
+                        if (!err) {
+                            userID = userRow.UserID;
+                            serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
+                                serverDB.get('insert into AuthorizedUser (DeviceID, UserID, Permission) values (?, ?, ?)',
+                                    deviceID, userID, permission, function(err) {
+                                        if (!err) {
+                                            status = 0;
+                                        } else {
+                                            console.log('ERROR in insert in /addAuthUser: ' + err);
+                                        }
+                                    })
+                            });
+                        } else {
+                            console.log('ERROR in delete in /addAuthUser: ' + err);
+                        }
+                    });
+                } else {
+                    status = 1;
+                }
+            }
+        });
+        res.send(
+            {Status: status,
+            UserID: userID});
+        serverDB.close();
+    });
+
     // =====================================
     // LOGOUT ==============================
     // =====================================
@@ -866,25 +979,35 @@ module.exports = function(app, passport) {
             // TODO:
             // where to have the userID
             // how to get the PrimaryKey (DeviceID) of the newly inserted tuple?
-            serverDB.run(
-                'insert into Device (DeviceID, ConnectionID, UserID) \
-                values(?, ?, ?)',
-                common.GlobalDeviceID, peer_id, 1,
-                function(err, row) {
-                    if (err) {
-                        console.log('ERROR: ' + err);
-                    }
+
+            var userName = req.user.username;
+            var userID;
+            serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow){
+                if (!err) {
+                    userID = userRow.UserID;
+
                     serverDB.run(
-                        'insert into AuthorizedUser (DeviceID, UserID, Permission) \
+                        'insert into Device (DeviceID, ConnectionID, UserID) \
                         values(?, ?, ?)',
-                        common.GlobalDeviceID, 1, 0, function(err, row){
-                            common.GlobalDeviceID += 1;
-                        });
+                        common.GlobalDeviceID, peer_id, UserID,
+                        function(err, row) {
+                            if (err) {
+                                console.log('ERROR: ' + err);
+                            }
+                            serverDB.run(
+                                'insert into AuthorizedUser (DeviceID, UserID, Permission) \
+                                values(?, ?, ?)',
+                                common.GlobalDeviceID, UserID, 0, function(err, row){
+                                    common.GlobalDeviceID += 1;
+                                }
+                            );
+                        }
+                    );
                 }
-            );
+            })
             serverDB.close();
         }
- });
+    });
 
     app.get('/stateUpdate', function(req, res) {
         console.log('GET /stateUpdate');

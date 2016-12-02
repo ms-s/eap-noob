@@ -40,7 +40,7 @@
             <!-- Navigation. We hide it in small screens. -->
             <button id="demo-menu-lower-right"
                     class="mdl-button mdl-js-button mdl-button--icon">
-                <i class="material-icons">more_vert</i>
+                <i class="material-icons">add</i>
             </button>
             <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
                 for="demo-menu-lower-right">
@@ -75,29 +75,47 @@
                                  height="100%" border="0" alt="" style="padding:10px;">
                         </button>
                         <ul class="mdl-list" id="controlPad">
-                            <li class="mdl-list__item" id="nowPlaying">NOW PLAYING: </li>
+                            <!--<li class="mdl-list__item" id="nowPlaying">NOW PLAYING: </li>-->
                             <li class="mdl-list__item">
                                 <div style="margin-left:auto; margin-right:auto">
-                                    <button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, true)" id="skipPrevious" disabled>
+                                    <!--<button class="mdl-button mdl-js-button mdl-button--icon" onclick="skip(this, true)" id="skipPrevious" disabled>
                                         <i class="material-icons">skip_previous</i>
-                                    </button>
-                                    <button id="play-button" class="mdl-button mdl-js-button mdl-button--icon" onclick="playAudio(this, false)" disabled>
+                                    </button>-->
+                                    <button id="play-button" class="mdl-button mdl-js-button mdl-js-ripple-effect" onclick="clickPlayResumeButton()" disabled>
                                         <i class="material-icons">play_arrow</i>
+                                        /
+                                        <i class="material-icons">pause</i>
                                     </button>
-                                    <button class="mdl-button mdl-js-button mdl-button--icon" id="skipNext" onclick="skip(this, false)" disabled>
+                                    <!--<button class="mdl-button mdl-js-button mdl-button--icon" id="skipNext" onclick="skip(this, false)" disabled>
                                         <i class="material-icons">skip_next</i>
-                                    </button>
+                                    </button>-->
                                 </div>
                             </li>
                             <li class="mdl-list__item">
-                                <div style="margin-left:auto; margin-right:auto">
+                                <div style="margin-left: auto; margin-right: auto;">
                                     <i class="material-icons">volume_up</i>
                                 </div>
+                                <div style="margin-left: auto; margin-right: auto;">
+                                    <button id="volume-up-button" class="mdl-button mdl-js-button mdl-button--icon"
+                                            onclick="clickVolumeUpButton()" disabled>
+                                        <i class="material-icons">add</i>
+                                    </button>
+                                </div>
+                                <div style="margin-left: auto; margin-right: auto;">
+                                    <button id="volume-down-button" class="mdl-button mdl-js-button mdl-button--icon"
+                                            onclick="clickVolumeDownButton()" disabled>
+                                        <i class="material-icons">remove</i>
+                                    </button>
+                                </div>
+
+                                <!--<div style="margin-left:auto; margin-right:auto">
+                                    <i class="material-icons">volume_up</i>
+                                </div>-->
                             </li>
-                            <li>
+                            <!--<li>
                                 <input class="mdl-slider mdl-js-slider" type="range" min="0" max="20" value="0"
                                        tabindex="0" id="volumeSlider" oninput="clickSlider(this.value)" disabled>
-                            </li>
+                            </li>-->
                         </ul>
                         <ul class="mdl-list" id="audioContents">
                         </ul>
@@ -158,7 +176,7 @@
                         //        "</span></span>";
                         txt += "<span class='mdl-list__item-secondary-content'> " +
                                 "<a class='mdl-list__item-secondary-action' value-name='" + audio['ContentName'] +
-                                "'value-url='" + audio['URL'] + "' onclick='playAudio(this, true)'>";
+                                "'value-url='" + audio['URL'] + "' onclick='playAudioStateless(this, true)'>";
                         txt += "<i class='material-icons'>keyboard_arrow_right</i>";
                         txt += "</a></span></li>";
                     });
@@ -174,12 +192,15 @@
     }
 
     function showControlPad() {
-        document.getElementById("skipPrevious").disabled = false;
+        // document.getElementById("skipPrevious").disabled = false;
+        document.getElementById("volume-up-button").disabled = false;
         document.getElementById("play-button").disabled = false;
-        document.getElementById("skipNext").disabled = false;
-        document.getElementById("volumeSlider").disabled = false;
+        document.getElementById("volume-down-button").disabled = false;
+        // document.getElementById("skipNext").disabled = false;
+        // document.getElementById("volumeSlider").disabled = false;
     }
 
+    // Deprecated
     function clickSlider(value) {
         var xhttp = new XMLHttpRequest();
         var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=volume&URL="
@@ -188,6 +209,7 @@
         xhttp.send()
     }
 
+    // Deprecated
     function skip(buttion, isPrevious) {
         var num = 0;
         var videoname = "";
@@ -229,13 +251,14 @@
 
 
     function gotoAddDevice() {
-        //window.location = "/addDevice";
+        window.location = "/addDevice";
     }
 
     function gotoLogout() {
         window.location = "/logout";
     }
 
+    // Deprecated
     function playAudio(button, bylist) {
         action = "play"
 
@@ -280,6 +303,39 @@
 
     function gotoHome() {
         window.location = "/profile";
+    }
+
+    function playAudioStateless(button) {
+        var videourl = button.getAttribute("value-url");
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=audio&URL=" + videourl + "&source="
+            + "spotify&action=play";
+        xhttp.open("POST", url, true);
+        xhttp.send();
+    }
+
+    function clickPlayResumeButton() {
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=audio&URL=&source=spotify"
+            + "&action=change";
+        xhttp.open("POST", url, true);
+        xhttp.send();
+    }
+
+    function clickVolumeUpButton() {
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=audio&URL=&source=spotify"
+            + "&action=up";
+        xhttp.open("POST", url, true);
+        xhttp.send();
+    }
+
+    function clickVolumeDownButton() {
+        var xhttp = new XMLHttpRequest();
+        var url = "/control?userID=<%=UserID%>&deviceID=<%=DeviceID%>&contentType=audio&URL=&source=spotify"
+            + "&action=down";
+        xhttp.open("POST", url, true);
+        xhttp.send();
     }
 
 </script>

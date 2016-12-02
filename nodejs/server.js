@@ -249,6 +249,7 @@ app.post('/control', function(req, res) {
     var content;
 
     var jsonData = {
+        'userID': userID,
         'type': contentType,
         'action': action,
         'url': url,
