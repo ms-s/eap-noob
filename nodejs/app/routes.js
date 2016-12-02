@@ -842,6 +842,8 @@ module.exports = function(app, passport) {
         serverDB = new sqlite3.Database(serverDBPath);
         serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
             if (!err) {
+
+            } else {
                 console.log('ERROR in /revokeAuthUser: ' + err);
             }
         })
