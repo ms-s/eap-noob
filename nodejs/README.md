@@ -245,7 +245,8 @@ Client to Server Metadata protocol (through websocket)
     "DeviceName": e.g "Samsung Display",  
     "DeviceType": a string of types separated by semi-colon; e.g "Video;Audio",
     "UpdateSource": "www.abc.com",
-    "DeviceDescription": "some description"
+    "DeviceDescription": "some description",
+    "DeviceImage": "www.abc.com/a.jpg"
 }
 ```
 Client to Server GetContent protocol (through websocket)

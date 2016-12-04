@@ -70,6 +70,7 @@ var server = ws.createServer(property, function (conn) {
             var deviceType = msg['DeviceType'];
             var updateSource = msg['UpdateSource'];
             var deviceDescription = msg['DeviceDescription'];
+            var deviceImage = msg['DeviceImage'];
             console.log('DeviceName: ' + deviceName);
             console.log('DeviceDescription: ' + deviceDescription);
 
@@ -80,8 +81,8 @@ var server = ws.createServer(property, function (conn) {
                 if (!err) {
                     deviceID = row.DeviceID;
                     serverDB.serialize(function() {
-                        var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, SoftwareUpdateURL = ?, Description = ? WHERE DeviceID = ?");
-                        stmt.run(deviceName, deviceType, updateSource, deviceDescription, deviceID);
+                        var stmt = serverDB.prepare("UPDATE Device SET DeviceName = ?, DeviceType = ?, SoftwareUpdateURL = ?, Description = ?, Image = ? WHERE DeviceID = ?");
+                        stmt.run(deviceName, deviceType, updateSource, deviceDescription, deviceImage, deviceID);
                         stmt.finalize();
                         serverDB.close();
                     });
