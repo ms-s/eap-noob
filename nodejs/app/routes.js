@@ -116,7 +116,7 @@ module.exports = function(app, passport) {
         var deviceList = [];
 
         serverDB.get('select UserName from User where UserID = ?', userID, function(err, userRow) {
-            if (!err) {
+            if (!err && userRow != undefined) {
                 userName = userRow.UserName;
                 serverDB.all('select D.DeviceID, D.DeviceName, D.DeviceState, D.Description, D.Image \
                 from Device as D, AuthorizedUser as A \
@@ -174,7 +174,7 @@ module.exports = function(app, passport) {
 
         serverDB = new sqlite3.Database(serverDBPath);
         serverDB.get('select DeviceName, DeviceState, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
-            if (!err) {
+            if (!err && deviceRow != undefined) {
                 deviceName = deviceRow.DeviceName;
                 deviceState = deviceRow.DeviceState;
                 description = deviceRow.Description;
@@ -182,7 +182,7 @@ module.exports = function(app, passport) {
                 image = deviceRow.Image;
 
                 serverDB.get('select Permission from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err, permissionRow){
-                    if (!err) {
+                    if (!err && permissionRow != undefined) {
                         permission = permissionRow.Permission;
 
                         serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
@@ -356,7 +356,7 @@ module.exports = function(app, passport) {
 
         serverDB = new sqlite3.Database(serverDBPath);
         serverDB.get('select DeviceName, DeviceState, Description, Image, DeviceType from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
-            if (!err) {
+            if (!err && deviceRow != undefined) {
                 deviceName = deviceRow.DeviceName;
                 deviceState = deviceRow.DeviceState;
                 description = deviceRow.Description;
@@ -614,13 +614,13 @@ module.exports = function(app, passport) {
         var deviceID;
 
         serverDB.get('select DeviceID, UserID from Notification where NotificationID = ?', notificationID, function(err, notificationRow) {
-            if (!err) {
+            if (!err && notificationRow != undefined) {
                 deviceID = notificationRow.DeviceID;
                 userID = notificationRow.UserID;
             }
 
             serverDB.get('select DeviceName, DeviceState, SoftwareUpdateURL, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
-                if (!err) {
+                if (!err && deviceRow != undefined) {
                     deviceName = deviceRow.DeviceName;
                     deviceState = deviceRow.DeviceState;
                     description = deviceRow.Description;
@@ -854,7 +854,7 @@ module.exports = function(app, passport) {
             if (!err) {
                 if (row != undefined) {
                     serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
-                        if (!err) {
+                        if (!err && userRow != undefined) {
                             userID = userRow.UserID;
                             serverDB.get('delete from AuthorizedUser where DeviceID = ? and UserID = ?', deviceID, userID, function(err){
                                 serverDB.get('insert into AuthorizedUser (DeviceID, UserID, Permission) values (?, ?, ?)',
@@ -970,7 +970,7 @@ module.exports = function(app, passport) {
             var userName = req.user.username;
             var userID;
             serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow){
-                if (!err) {
+                if (!err && userRow != undefined) {
                     userID = userRow.UserID;
 
                     serverDB.run(
