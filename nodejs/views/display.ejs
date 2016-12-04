@@ -359,7 +359,10 @@
         var txt = "";
         if (ContentList.length > 0) {
             ContentList.forEach(function(video) {
-                txt += "<li class='mdl-list__item mdl-list__item--three-line'>";
+                txt += "<li class='mdl-list__item mdl-list__item--three-line' value-name='" +
+                        video['ContentName'].replace('\'', '') +
+                        "' value-url='" + video['VideoURL'].replace('\'', '') +
+                        "' onclick='playVideoStateless(this)'>";
                 txt += "<span class='mdl-list__item-primary-content'>";
                 txt += "<img src='" + video['ImageURL'] + "' class='mdl-list__item-avatar'>";
                 txt += "<span>" + video['ContentName'].substr(0, 20) + "</span>";
@@ -368,7 +371,7 @@
                 txt += "<span class='mdl-list__item-secondary-content'> " +
                         "<a class='mdl-list__item-secondary-action' value-name='" +
                         video['ContentName'].replace('\'', '') +
-                        "'value-url='" + video['VideoURL'].replace('\'', '') + "' onclick='playVideoStateless(this)'>";
+                        "' value-url='" + video['VideoURL'].replace('\'', '') + "' onclick='playVideoStateless(this)'>";
                 txt += "<i class='material-icons'>keyboard_arrow_right</i>";
                 txt += "</a></span></li>";
 
