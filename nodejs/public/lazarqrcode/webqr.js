@@ -98,7 +98,7 @@ function read(a)
 {
     var html="<br><b> Result: </b><br>";
     if(a.indexOf("http://") === 0 || a.indexOf("https://") === 0) {
-        html += "<a target='_blank' href='" + a + "'>" + a + "</a><br>";
+        html += "<a target='_self' href='" + a + "'>" + a + "</a><br>";
     } else {
         html+="<b>"+htmlEntities(a)+"</b>";
     }
