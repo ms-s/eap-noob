@@ -553,18 +553,18 @@ module.exports = function(app, passport) {
                         return;
                     }
                     deviceRows.forEach(function(row) {
-                        var image;
-                        if (row.DeviceType == 'Video') {
-                            image = 'http://i.kinja-img.com/gawker-media/image/upload/t_original/dckiksbsuyomwbs1paqs.png';
-                        } else if (row.DeviceType == 'Audio') {
-                            image = 'http://assets.store.hp.com/hpusstore/images/3pp_573X430/ge5916.png';
-                        } else {
-                            image = 'http://larics.rasip.fer.hr/wp-content/uploads/2016/04/default-placeholder.png';
-                        }
+                        // var image;
+                        // if (row.DeviceType == 'Video') {
+                        //     image = 'http://i.kinja-img.com/gawker-media/image/upload/t_original/dckiksbsuyomwbs1paqs.png';
+                        // } else if (row.DeviceType == 'Audio') {
+                        //     image = 'http://assets.store.hp.com/hpusstore/images/3pp_573X430/ge5916.png';
+                        // } else {
+                        //     image = 'http://larics.rasip.fer.hr/wp-content/uploads/2016/04/default-placeholder.png';
+                        // }
                         deviceList.push({
                             DeviceID: row.DeviceID,
                             DeviceName: row.DeviceName,
-                            Image: image,
+                            Image: row.Image,
                             Description: row.Description});
                     });
 
