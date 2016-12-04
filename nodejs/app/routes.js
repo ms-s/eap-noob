@@ -55,7 +55,7 @@ module.exports = function(app, passport) {
     // =====================================
     // LOGIN ===============================
     // =====================================
-    app.get('GET /login', function(req, res) {
+    app.get('login', function(req, res) {
     console.log('GET /login');
     // render the page and pass in any flash data if it exists
     res.render('login.ejs', { message: req.flash('loginMessage')}); 
@@ -864,18 +864,19 @@ module.exports = function(app, passport) {
                                         } else {
                                             console.log('ERROR in insert in /addAuthUser: ' + err);
                                         }
+                                        res.send({Status: status, UserID: userID});
                                     })
                             });
                         } else {
+                            res.send({Status: status, UserID: userID});
                             console.log('ERROR in delete in /addAuthUser: ' + err);
                         }
                     });
                 } else {
                     status = 1;
+                    res.send({Status: status, UserID: userID});
                 }
             }
-
-            res.send({Status: status, UserID: userID});
         });
         serverDB.close();
     });
