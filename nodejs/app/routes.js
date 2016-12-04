@@ -118,12 +118,7 @@ module.exports = function(app, passport) {
         serverDB.get('select UserName from User where UserID = ?', userID, function(err, userRow) {
             if (!err) {
                 userName = userRow.UserName;
-            }
-
-            // how about using join?
-
-            // test
-            serverDB.all('select D.DeviceID, D.DeviceName, D.DeviceState, D.Description, D.Image \
+                serverDB.all('select D.DeviceID, D.DeviceName, D.DeviceState, D.Description, D.Image \
                 from Device as D, AuthorizedUser as A \
                 where D.DeviceID = A.DeviceID and A.UserID = ?', userID, function(err, rows) {
                     if (!err) {
@@ -139,43 +134,22 @@ module.exports = function(app, passport) {
                     } else {
                         console.log('ERROR: join query in /devices')
                     }
-
-                    serverDB.close();
+                    res.render('devices.ejs', {
+                        UserID: userID,
+                        UserName: userName,
+                        Devices: deviceList
+                    });
                 });
-
-            // serverDB.all('select DeviceID from AuthorizedUser where UserID = ?', userID, function(err, deviceIDRows){
-            //     if (!err) {
-            //         deviceIDRows.forEach(function(deviceIDRow) {
-            //             var deviceID = deviceIDRow.DeviceID;
-
-            //         });
-            //     } else {
-
-            //     }
-            // });
-
-            // serverDB.all('select DeviceID, DeviceName, DeviceState, Description, Image from Device where UserID = ?', userID, function(err, deviceRows) {
-            //     if (!err) {
-            //         deviceRows.forEach(function(row) {
-            //             deviceList.push({
-            //                 DeviceID: row.DeviceID, 
-            //                 DeviceName: row.DeviceName,
-            //                 DeviceState: row.DeviceState,
-            //                 Description: row.Description,
-            //                 Image: row.Image
-            //             });
-            //         });
-            //     }
-
-            //     res.render('devices.ejs', {
-            //         UserID: userID,
-            //         UserName: userName,
-            //         Devices: deviceList
-            //     });
-
-            //     serverDB.close();
-            // });
+            } else {
+                res.render('devices.ejs', {
+                    UserID: userID,
+                    UserName: userName,
+                    Devices: deviceList
+                });
+            }
         });
+
+        serverDB.close();
     });
 
     app.get('/device', isLoggedIn, function(req, res){
@@ -449,7 +423,7 @@ module.exports = function(app, passport) {
     });
 
     app.get('/getAudio', function(req, res) {
-        console.log('POST /getAudio');
+        console.log('GET/getAudio');
         // console.log('Query: ' + req);
 
         var UserID = parseInt(req.param('UserID'));
@@ -900,10 +874,9 @@ module.exports = function(app, passport) {
                     status = 1;
                 }
             }
+
+            res.send({Status: status, UserID: userID});
         });
-        res.send(
-            {Status: status,
-            UserID: userID});
         serverDB.close();
     });
 
