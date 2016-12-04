@@ -68,7 +68,8 @@ class Client(WebSocketClient):
         super(Client, self).__init__(url, protocols, extensions, heartbeat_freq, ssl_options, headers)
         self.driver = None
         self.volume = 0
-        self.music_status = 'unknown'
+        # Assuming a spotify_appkey.key in the current dir
+        self.session = spotify.Session()
 
     def on_connection_state_updated(self, session):
         if session.connection.state is spotify.ConnectionState.LOGGED_IN:
@@ -114,15 +115,19 @@ class Client(WebSocketClient):
             # print error message
 
     def toplist_handler(self, msg):
+        print "[TOPLIST] enter"
         user_name = str(msg['source_user_name'])
         passwd = str(msg['source_password'])
         print user_name, passwd
         self.account_login('spotify', user_name, passwd)
+        print '[TOPLIST] user has already logged in'
         l = self.get_toplist(10)
+        print "get content_list", l
         content = {'Type': 'ContentList', 'ContentList': l, 'UserID': msg['userID']}
         list_str = json.dumps(content)
         logger.info("List str: %s", list_str)
         self.send(list_str)
+        print "[TOPLIST] exit"
 
     def volume_handler(self, msg):
         control = msg['action']
@@ -224,13 +229,11 @@ class Client(WebSocketClient):
         self.session.player.play()
 
     def get_toplist(self, num):
-        result = []
+        # result = []
         toplist = self.session.get_toplist(type=spotify.ToplistType.TRACKS, region='US')
         toplist.load()
         tracks = toplist.tracks[:num]
-        for track in tracks:
-            result.append({'ContentName': track.name, 'ContentType': 'Audio', 'ContentURL': str(track.link), 'Source': 'Spotify'})
-
+        result = [{'ContentName': track.name, 'ContentType': 'Audio', 'ContentURL': str(track.link), 'Source': 'Spotify'} for track in tracks]
         return result
 
     # def get_music_url_list(self, num):
@@ -250,13 +253,17 @@ class Client(WebSocketClient):
 
     def account_login(self, source, username, passwd):
         if source == 'spotify':
-            # Assuming a spotify_appkey.key in the current dir
-            self.session = spotify.Session()
+            if self.session.connection.state is spotify.ConnectionState.LOGGED_IN:
+                return
+
             # Process events in the background
             loop = spotify.EventLoop(self.session)
             loop.start()
             # Connect an audio sink
-            audio = spotify.PortAudioSink(self.session)
+            try:
+                audio = spotify.PortAudioSink(self.session)
+            except:
+                audio = spotify.AlsaSink(self.session)
             # Events for coordination
             self.logged_in = threading.Event()
             self.end_of_track = threading.Event()
