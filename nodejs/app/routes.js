@@ -130,6 +130,8 @@ module.exports = function(app, passport) {
                                 Description: row.Description,
                                 Image: row.Image
                             });
+                            console.log('DeviceName: ' + row.DeviceName);
+                            console.log('DeviceImage: ' + row.Image);
                         });
                     } else {
                         console.log('ERROR: join query in /devices')
