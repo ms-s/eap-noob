@@ -864,18 +864,19 @@ module.exports = function(app, passport) {
                                         } else {
                                             console.log('ERROR in insert in /addAuthUser: ' + err);
                                         }
+                                        res.send({Status: status, UserID: userID});
                                     })
                             });
                         } else {
+                            res.send({Status: status, UserID: userID});
                             console.log('ERROR in delete in /addAuthUser: ' + err);
                         }
                     });
                 } else {
                     status = 1;
+                    res.send({Status: status, UserID: userID});
                 }
             }
-
-            res.send({Status: status, UserID: userID});
         });
         serverDB.close();
     });
