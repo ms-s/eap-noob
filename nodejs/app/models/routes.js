@@ -55,7 +55,7 @@ module.exports = function(app, passport) {
     // =====================================
     // LOGIN ===============================
     // =====================================
-    app.get('login', function(req, res) {
+    app.get('/login', function(req, res) {
     console.log('GET /login');
     // render the page and pass in any flash data if it exists
     res.render('login.ejs', { message: req.flash('loginMessage')}); 
@@ -130,6 +130,8 @@ module.exports = function(app, passport) {
                                 Description: row.Description,
                                 Image: row.Image
                             });
+                            console.log('DeviceName: ' + row.DeviceName);
+                            console.log('DeviceImage: ' + row.Image);
                         });
                     } else {
                         console.log('ERROR: join query in /devices')
@@ -551,18 +553,18 @@ module.exports = function(app, passport) {
                         return;
                     }
                     deviceRows.forEach(function(row) {
-                        var image;
-                        if (row.DeviceType == 'Video') {
-                            image = 'http://i.kinja-img.com/gawker-media/image/upload/t_original/dckiksbsuyomwbs1paqs.png';
-                        } else if (row.DeviceType == 'Audio') {
-                            image = 'http://assets.store.hp.com/hpusstore/images/3pp_573X430/ge5916.png';
-                        } else {
-                            image = 'http://larics.rasip.fer.hr/wp-content/uploads/2016/04/default-placeholder.png';
-                        }
+                        // var image;
+                        // if (row.DeviceType == 'Video') {
+                        //     image = 'http://i.kinja-img.com/gawker-media/image/upload/t_original/dckiksbsuyomwbs1paqs.png';
+                        // } else if (row.DeviceType == 'Audio') {
+                        //     image = 'http://assets.store.hp.com/hpusstore/images/3pp_573X430/ge5916.png';
+                        // } else {
+                        //     image = 'http://larics.rasip.fer.hr/wp-content/uploads/2016/04/default-placeholder.png';
+                        // }
                         deviceList.push({
                             DeviceID: row.DeviceID,
                             DeviceName: row.DeviceName,
-                            Image: image,
+                            Image: row.Image,
                             Description: row.Description});
                     });
 
