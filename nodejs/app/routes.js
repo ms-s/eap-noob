@@ -55,7 +55,7 @@ module.exports = function(app, passport) {
     // =====================================
     // LOGIN ===============================
     // =====================================
-    app.get('login', function(req, res) {
+    app.get('/login', function(req, res) {
     console.log('GET /login');
     // render the page and pass in any flash data if it exists
     res.render('login.ejs', { message: req.flash('loginMessage')}); 
