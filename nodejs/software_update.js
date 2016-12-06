@@ -2,7 +2,7 @@ var sqlite3 = require('sqlite3').verbose();
 var serverDBPath = '/var/serverDB';
 
 serverDB = new sqlite3.Database(serverDBPath);
-serverDB.run(
+serverDB.all(
 	'select DeviceID, DeviceName, Description from Device',
 	function(err, deviceRows) {
 		if (!err) {
