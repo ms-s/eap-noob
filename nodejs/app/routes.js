@@ -468,7 +468,7 @@ module.exports = function(app, passport) {
         console.log('======================================');
         connMap[DeviceID].send(JSON.stringify(jsonData));
 
-        int k = 0;
+        var k = 0;
 
         handle = setInterval(function() {
             serverDB = new sqlite3.Database(serverDBPath);
