@@ -643,7 +643,7 @@ module.exports = function(app, passport) {
             } else {
                 console.log('Error in select UserID in /notification: ' + err);
             }
-            serverDB.get('select DeviceID, UserID from Notification where NotificationID = ?', notificationID, function(err, notificationRow) {
+            serverDB.get('select DeviceID from Notification where NotificationID = ?', notificationID, function(err, notificationRow) {
                 if (!err && notificationRow != undefined) {
                     deviceID = notificationRow.DeviceID;
                 }
