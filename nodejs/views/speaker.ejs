@@ -200,10 +200,12 @@
                         txt += "<i class='material-icons'>keyboard_arrow_right</i>";
                         txt += "</a></span></li>";
                     });
-                }
 
-                showControlPad();
-                document.getElementById("audioContents").innerHTML = txt;
+                    showControlPad();
+                    document.getElementById("audioContents").innerHTML = txt;
+                } else {
+                    document.getElementById("audioContents").innerHTML = "Login Error!";
+                }
             }
         };
         xhttp.open("GET", url, true)
