@@ -1,3 +1,4 @@
+var sqlite3 = require('sqlite3').verbose();
 var serverDBPath = '/var/serverDB';
 
 serverDB = new sqlite3.Database(serverDBPath);
