@@ -722,8 +722,8 @@ module.exports = function(app, passport) {
                                 };
 
                                 connMap[deviceID].send(JSON.stringify(jsonData));
-                                // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                                // });
+                                serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                                });
                                 res.json({'status': 'OK'});
                             }
                         } else {
