@@ -4,7 +4,7 @@
 <head>
     <% include ./head %>
     <style>
-        .mdl-list__item:hover {
+        #content:hover {
             background: lightgrey;
         }
         .demo-card-notification.mdl-card {
@@ -186,7 +186,7 @@
 
                 if (ContentList.length > 0) {
                     ContentList.forEach(function(audio) {
-                        txt += "<li class='mdl-list__item mdl-list__item--three-line'" + " value-name='" +
+                        txt += "<li id='content' class='mdl-list__item mdl-list__item--three-line'" + " value-name='" +
                             audio['ContentName'].replace('\'', '') +
                             "' value-url='" + audio['URL'].replace('\'', '') +
                             "' onclick='playAudioStateless(this)'>";

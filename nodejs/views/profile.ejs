@@ -183,7 +183,11 @@
                 <% Devices.forEach(function(device) {%>
                 <li class="mdl-list__item mdl-list__item--three-line">
                         <span class="mdl-list__item-primary-content">
-                            <img src="<%=device.Image%>" class="mdl-list__item-avatar">
+                            <% if (device.Image != null) { %>
+                                <img src="<%=device.Image%>" style="background: white;" class="mdl-list__item-avatar">
+                            <% } else { %>
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" style="background: white;" class="mdl-list__item-avatar">
+                            <% } %>
                             <span><%=device.DeviceName %></span>
                             <span class="mdl-list__item-text-body">
                                 <%=device.Description%>

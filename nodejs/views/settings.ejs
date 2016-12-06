@@ -4,6 +4,10 @@
 <head>
     <% include ./head %>
     <style>
+        .image {
+            height: 30px;
+
+        }
         .mdl-list__item:hover {
             background: lightgrey;
         }
@@ -27,12 +31,16 @@
     </header>
     <main class="mdl-layout__content">
         <div class="page-content">
-            <img src="http://vignette2.wikia.nocookie.net/blazingdragons/images/1/14/Under_Construction.png/revision/latest?cb=20140413050747">
-            <h2>Under Construction...</h2>
+            <div style="margin-right: auto; margin-left: auto;">
+                <img class="image" style="height: 200px;" src="http://vignette2.wikia.nocookie.net/blazingdragons/images/1/14/Under_Construction.png/revision/latest?cb=20140413050747">
+            </div>
+            <div style="margin-right: auto; margin-left: auto;">
+                <h2>Under Construction...</h2>
+            </div>
         </div>
     </main>
 
-    <% include ./footer-devices.ejs %>
+    <% include ./footer-settings.ejs %>
 </div>
 </body>
 <script>
