@@ -468,6 +468,8 @@ module.exports = function(app, passport) {
         console.log('======================================');
         connMap[DeviceID].send(JSON.stringify(jsonData));
 
+        var k = 0;
+
         handle = setInterval(function() {
             serverDB = new sqlite3.Database(serverDBPath);
             serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
@@ -485,7 +487,12 @@ module.exports = function(app, passport) {
                         res.send(contentList);
                     } else {
                         console.log('Error or empty rows: ' + err);
+                        if (k == 3) {
+                            clearTimeout(handle);
+                            res.send(contentList);
+                        }
                     }
+                    k += 1;
                 }
             );
             serverDB.close();
@@ -643,7 +650,7 @@ module.exports = function(app, passport) {
             } else {
                 console.log('Error in select UserID in /notification: ' + err);
             }
-            serverDB.get('select DeviceID, UserID from Notification where NotificationID = ?', notificationID, function(err, notificationRow) {
+            serverDB.get('select DeviceID from Notification where NotificationID = ?', notificationID, function(err, notificationRow) {
                 if (!err && notificationRow != undefined) {
                     deviceID = notificationRow.DeviceID;
                 }
