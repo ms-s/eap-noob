@@ -108,6 +108,17 @@
 
                 <%}%>
 
+                <% if (Permission == 0) { %>
+                <div class="mdl-cell mdl-cell--4-col">
+                    <div class="auth-card mdl-card mdl-shadow--2dp" style="width:100%; min-height: 10px">
+                        <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;"
+                                onclick="gotoAuthUserPage()">
+                            Authenticate Users
+                        </button>
+                    </div>
+                </div>
+                <% } %>
+
                 <div class="mdl-cell mdl-cell--4-col">
                     <div class="mdl-card mdl-shadow--2dp" style="min-height: 0px; width: 100%">
                         <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;"
@@ -172,17 +183,6 @@
                         </ul>
                     </div>
                 </div>
-
-                <% if (Permission == 0) { %>
-                    <div class="mdl-cell mdl-cell--4-col">
-                        <div class="auth-card mdl-card mdl-shadow--2dp" style="width:100%; min-height: 10px">
-                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-block" style="height: 56px;"
-                                    onclick="gotoAuthUserPage()">
-                                Authenticate Users
-                            </button>
-                        </div>
-                    </div>
-                <% } %>
             </div>
         </div>
     </main>
