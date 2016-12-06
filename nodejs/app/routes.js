@@ -541,7 +541,9 @@ module.exports = function(app, passport) {
 
             userID = userRow.UserID;
 
-            serverDB.all('select NotificationID, DeviceID, NotificationType, Description from Notification where UserID = ?', userID, function(err, notificationRows) {
+            // TODO, need to first select devices' IDs
+            serverDB.all('select N.NotificationID, N.DeviceID, N.NotificationType, N.Description from Notification as N, AuthorizedUser as A \
+            where N.DeviceID = A.DeviceID and A.UserID = ?', userID, function(err, notificationRows) {
                 if (err) {
                     res.render('profile.ejs', {
                         UserID: userID,
@@ -572,15 +574,8 @@ module.exports = function(app, passport) {
                         serverDB.close();
                         return;
                     }
+
                     deviceRows.forEach(function(row) {
-                        // var image;
-                        // if (row.DeviceType == 'Video') {
-                        //     image = 'http://i.kinja-img.com/gawker-media/image/upload/t_original/dckiksbsuyomwbs1paqs.png';
-                        // } else if (row.DeviceType == 'Audio') {
-                        //     image = 'http://assets.store.hp.com/hpusstore/images/3pp_573X430/ge5916.png';
-                        // } else {
-                        //     image = 'http://larics.rasip.fer.hr/wp-content/uploads/2016/04/default-placeholder.png';
-                        // }
                         deviceList.push({
                             DeviceID: row.DeviceID,
                             DeviceName: row.DeviceName,
@@ -595,6 +590,7 @@ module.exports = function(app, passport) {
                         NotificationList: notificationList,
                         Devices: deviceList
                     });
+
                     serverDB.close();
                     return;
                 });
@@ -613,6 +609,7 @@ module.exports = function(app, passport) {
         var notificationID;
         var action;
         var type;
+        var userName = req.user.username;
         var userID;
         var softwareUpdateURL;
         tmpParts = parts[0].split('=');
@@ -635,125 +632,133 @@ module.exports = function(app, passport) {
         var contentList = [];
         var deviceID;
 
-        serverDB.get('select DeviceID, UserID from Notification where NotificationID = ?', notificationID, function(err, notificationRow) {
-            if (!err && notificationRow != undefined) {
-                deviceID = notificationRow.DeviceID;
-                userID = notificationRow.UserID;
+        // TODO, first get UserID from userName
+        serverDB.get('select UserID from User where UserName = ?', userName, function(err, userRow) {
+            if (!err) {
+                if (userRow != undefined) {
+                    userID = userRow.UserID;
+                } else {
+                    console.log('userRow undefined');
+                }
+            } else {
+                console.log('Error in select UserID in /notification: ' + err);
             }
-
-            serverDB.get('select DeviceName, DeviceState, SoftwareUpdateURL, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
-                if (!err && deviceRow != undefined) {
-                    deviceName = deviceRow.DeviceName;
-                    deviceState = deviceRow.DeviceState;
-                    description = deviceRow.Description;
-                    image = deviceRow.Image;
-                    softwareUpdateURL = deviceRow.SoftwareUpdateURL;
-                    deviceType = deviceRow.deviceType;
+            serverDB.get('select DeviceID, UserID from Notification where NotificationID = ?', notificationID, function(err, notificationRow) {
+                if (!err && notificationRow != undefined) {
+                    deviceID = notificationRow.DeviceID;
                 }
 
-                serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
-                    if (!err) {
-                        notificationRows.forEach(function(row) {
-                            notificationList.push({
-                                NotificationID: row.NotificationID,
-                                NotificationType: row.NotificationType,
-                                Description: row.Description
+                serverDB.get('select DeviceName, DeviceState, SoftwareUpdateURL, Description, DeviceType, Image from Device where DeviceID = ?', deviceID, function(err, deviceRow) {
+                    if (!err && deviceRow != undefined) {
+                        deviceName = deviceRow.DeviceName;
+                        deviceState = deviceRow.DeviceState;
+                        description = deviceRow.Description;
+                        image = deviceRow.Image;
+                        softwareUpdateURL = deviceRow.SoftwareUpdateURL;
+                        deviceType = deviceRow.deviceType;
+                    }
+
+                    serverDB.all('select NotificationID, NotificationType, Description from Notification where DeviceID = ?', deviceID, function(err, notificationRows) {
+                        if (!err) {
+                            notificationRows.forEach(function(row) {
+                                notificationList.push({
+                                    NotificationID: row.NotificationID,
+                                    NotificationType: row.NotificationType,
+                                    Description: row.Description
+                                });
                             });
-                        });
-                    }
-
-                    if (type == 'SoftwareUpdate') {
-                        if (action == 'cancel') {
-                            // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                            // });
-                            res.json({'status': 'OK'});
-                        } else if (action == 'details') {
-                            if (deviceType == 'Video') {
-                                res.render('display.ejs', {
-                                    DeviceID: deviceID,
-                                    UserID: userID,
-                                    DeviceName: deviceName,
-                                    DeviceState: deviceState,
-                                    Description: description,
-                                    Image: image,
-                                    NotificationList: notificationList,
-                                    ContentList: contentList
-                                });
-                            } else if (deviceType == 'Audio') {
-                                res.render('speaker.ejs', {
-                                    DeviceID: deviceID,
-                                    UserID: userID,
-                                    DeviceName: deviceName,
-                                    DeviceState: deviceState,
-                                    Description: description,
-                                    Image: image,
-                                    NotificationList: notificationList,
-                                    ContentList: contentList
-                                });
-                            } else {
-                                console.log('Invalid DeviceType');
-                                res.send('Invalid DeviceType');
-                            }
-                        } else if (action == 'agree') {
-                            // transmit file to client
-
-                            var content = base64_encode(softwareUpdateURL);
-                            var jsonData = {
-                                'type': 'update',
-                                'action': undefined,
-                                'url': undefined,
-                                'source': undefined,
-                                'content': content,
-                                'software_name': 'update'
-                            };
-                            // should use device ID as key
-                            // connMap['Lehao'].send(JSON.stringify(jsonData));
-                            connMap[deviceID].send(JSON.stringify(jsonData));
-                            // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                            // });
-                            res.json({'status': 'OK'});
                         }
-                    } else {
-                        // VideoListUpdate / AudioListUpdate
-                        if (action == 'cancel') {
-                            // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
-                            // });
-                            res.json({'status': 'OK'});
-                        } else if (action == 'details') {
-                            if (deviceType == 'Video') {
-                                res.render('display.ejs', {
-                                    DeviceID: deviceID,
-                                    UserID: userID,
-                                    DeviceName: deviceName,
-                                    DeviceState: deviceState,
-                                    Description: description,
-                                    Image: image,
-                                    NotificationList: notificationList,
-                                    ContentList: contentList
-                                });
-                            } else if (deviceType == 'Audio') {
-                                res.render('speaker.ejs', {
-                                    DeviceID: deviceID,
-                                    UserID: userID,
-                                    DeviceName: deviceName,
-                                    DeviceState: deviceState,
-                                    Description: description,
-                                    Image: image,
-                                    NotificationList: notificationList,
-                                    ContentList: contentList
-                                });
-                            } else {
-                                console.log('Invalid DeviceType');
-                                res.send('Invalid DeviceType');
+
+                        if (type == 'SoftwareUpdate') {
+                            if (action == 'cancel') {
+                                // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                                // });
+                                res.json({'status': 'OK'});
+                            } else if (action == 'details') {
+                                if (deviceType == 'Video') {
+                                    res.render('display.ejs', {
+                                        DeviceID: deviceID,
+                                        UserID: userID,
+                                        DeviceName: deviceName,
+                                        DeviceState: deviceState,
+                                        Description: description,
+                                        Image: image,
+                                        NotificationList: notificationList,
+                                        ContentList: contentList
+                                    });
+                                } else if (deviceType == 'Audio') {
+                                    res.render('speaker.ejs', {
+                                        DeviceID: deviceID,
+                                        UserID: userID,
+                                        DeviceName: deviceName,
+                                        DeviceState: deviceState,
+                                        Description: description,
+                                        Image: image,
+                                        NotificationList: notificationList,
+                                        ContentList: contentList
+                                    });
+                                } else {
+                                    console.log('Invalid DeviceType');
+                                    res.send('Invalid DeviceType');
+                                }
+                            } else if (action == 'agree') {
+                                // transmit file to client
+
+                                var content = base64_encode(softwareUpdateURL);
+                                var jsonData = {
+                                    'type': 'update',
+                                    'action': undefined,
+                                    'url': undefined,
+                                    'source': undefined,
+                                    'content': content,
+                                    'software_name': 'update'
+                                };
+
+                                connMap[deviceID].send(JSON.stringify(jsonData));
+                                // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                                // });
+                                res.json({'status': 'OK'});
+                            }
+                        } else {
+                            // VideoListUpdate / AudioListUpdate
+                            if (action == 'cancel') {
+                                // serverDB.all('delete from Notification where NotificationID = ?', notificationID, function(err, row) {
+                                // });
+                                res.json({'status': 'OK'});
+                            } else if (action == 'details') {
+                                if (deviceType == 'Video') {
+                                    res.render('display.ejs', {
+                                        DeviceID: deviceID,
+                                        UserID: userID,
+                                        DeviceName: deviceName,
+                                        DeviceState: deviceState,
+                                        Description: description,
+                                        Image: image,
+                                        NotificationList: notificationList,
+                                        ContentList: contentList
+                                    });
+                                } else if (deviceType == 'Audio') {
+                                    res.render('speaker.ejs', {
+                                        DeviceID: deviceID,
+                                        UserID: userID,
+                                        DeviceName: deviceName,
+                                        DeviceState: deviceState,
+                                        Description: description,
+                                        Image: image,
+                                        NotificationList: notificationList,
+                                        ContentList: contentList
+                                    });
+                                } else {
+                                    console.log('Invalid DeviceType');
+                                    res.send('Invalid DeviceType');
+                                }
                             }
                         }
-                    }
-
-                    serverDB.close();
+                    });
                 });
             });
         });
-
+        serverDB.close();
     });
 
     app.get('/checkUpdate', isLoggedIn, function(req, res) {
@@ -763,9 +768,11 @@ module.exports = function(app, passport) {
 
         var parts = query.split('=');
         var userID = parseInt(parts[1]);
+
         var notificationList = [];
         serverDB = new sqlite3.Database(serverDBPath);
-        serverDB.all('select NotificationID, DeviceID, NotificationType, Description from Notification where UserID = ?', userID, function(err, rows) {
+        serverDB.all('select N.NotificationID, N.DeviceID, N.NotificationType, N.Description from Notification as N, AuthorizedUser as A\
+        where N.DeviceID = A.DeviceID and A.UserID = ?', userID, function(err, rows) {
             serverDB.close();
             if (!err) {
                 rows.forEach(function(row) {
@@ -869,8 +876,6 @@ module.exports = function(app, passport) {
         tmpParts = parts[2].split('=');
         permission = parseInt(tmpParts[1]);
 
-        // TODO multiple cases? e.g: duplicated insertion of users
-        // first delete, then add?
         serverDB = new sqlite3.Database(serverDBPath);
         serverDB.get('select * from User where UserName = ?', userName, function(err, row) {
             if (!err) {
@@ -986,9 +991,6 @@ module.exports = function(app, passport) {
 
             console.log('prepare to add uninitialized device into database')
             serverDB = new sqlite3.Database(serverDBPath);
-            // TODO:
-            // where to have the userID
-            // how to get the PrimaryKey (DeviceID) of the newly inserted tuple?
 
             var userName = req.user.username;
             var userID;
