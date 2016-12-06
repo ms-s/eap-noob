@@ -468,6 +468,8 @@ module.exports = function(app, passport) {
         console.log('======================================');
         connMap[DeviceID].send(JSON.stringify(jsonData));
 
+        int k = 0;
+
         handle = setInterval(function() {
             serverDB = new sqlite3.Database(serverDBPath);
             serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
@@ -485,7 +487,12 @@ module.exports = function(app, passport) {
                         res.send(contentList);
                     } else {
                         console.log('Error or empty rows: ' + err);
+                        if (k == 3) {
+                            clearTimeout(handle);
+                            res.send(contentList);
+                        }
                     }
+                    k += 1;
                 }
             );
             serverDB.close();
