@@ -1,4 +1,4 @@
-<!-- views/pages/index.ejs -->
+<!-- views/pages/speaker.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -189,7 +189,7 @@
                         txt += "<li class='mdl-list__item mdl-list__item--three-line'" + " value-name='" +
                             audio['ContentName'].replace('\'', '') +
                             "' value-url='" + audio['URL'].replace('\'', '') +
-                            "' onclick='playVideoStateless(this)'>";
+                            "' onclick='playAudioStateless(this)'>";
                         txt += "<span class='mdl-list__item-primary-content'>";
                         txt += "<span>" + audio['ContentName'].substr(0, 20) + "</span>";
                         //txt += "<span class='mdl-list__item-text-body'>" + audio['Artist'].substr(0, 50) +
