@@ -977,9 +977,9 @@ module.exports = function(app, passport) {
                     userID = userRow.UserID;
 
                     serverDB.run(
-                        'insert into Device (DeviceID, ConnectionID) \
-                        values(?, ?)',
-                        GlobalDeviceID, peer_id,
+                        'insert into Device (DeviceID, ConnectionID, DeviceName, Description) \
+                        values(?, ?, ?, ?)',
+                        GlobalDeviceID, peer_id, 'Connecting...', '',
                         function(err, row) {
                             if (err) {
                                 console.log('ERROR: ' + err);
