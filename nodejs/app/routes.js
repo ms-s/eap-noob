@@ -469,7 +469,7 @@ module.exports = function(app, passport) {
                 }
             );
             serverDB.close();
-        }, 500);
+        }, 5000);
         // serverDB = new sqlite3.Database(serverDBPath);        
         // // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
         // // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
