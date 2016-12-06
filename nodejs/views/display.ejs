@@ -363,7 +363,7 @@
         var txt = "";
         if (ContentList.length > 0) {
             ContentList.forEach(function(video) {
-                txt += "<li class='mdl-list__item mdl-list__item--three-line' value-name='" +
+                txt += "<li id='content' class='mdl-list__item mdl-list__item--three-line' value-name='" +
                         video['ContentName'].replace('\'', '') +
                         "' value-url='" + video['VideoURL'].replace('\'', '') +
                         "' onclick='playVideoStateless(this)'>";
