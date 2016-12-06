@@ -196,6 +196,7 @@
                 if (response.Status == 0) {
                     // Succeeded
                     users.push({UserID: response.UserID, UserName: userName});
+                    document.getElementById("message").innerHTML = "";
                     showUsers();
 
                 } else if (response.Status == 1) {

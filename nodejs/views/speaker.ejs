@@ -4,6 +4,9 @@
 <head>
     <% include ./head %>
     <style>
+        .mdl-list__item:hover {
+            background: lightgrey;
+        }
         .demo-card-notification.mdl-card {
             height: 160px;
         }
@@ -183,7 +186,10 @@
 
                 if (ContentList.length > 0) {
                     ContentList.forEach(function(audio) {
-                        txt += "<li class='mdl-list__item mdl-list__item--three-line'>";
+                        txt += "<li class='mdl-list__item mdl-list__item--three-line'" + " value-name='" +
+                            video['ContentName'].replace('\'', '') +
+                            "' value-url='" + video['VideoURL'].replace('\'', '') +
+                            "' onclick='playVideoStateless(this)'>";
                         txt += "<span class='mdl-list__item-primary-content'>";
                         txt += "<span>" + audio['ContentName'].substr(0, 20) + "</span>";
                         //txt += "<span class='mdl-list__item-text-body'>" + audio['Artist'].substr(0, 50) +
