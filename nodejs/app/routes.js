@@ -424,10 +424,10 @@ module.exports = function(app, passport) {
         serverDB.close();
     });
 
-    app.get('/settings', function(req, res)) {
+    app.get('/settings', function(req, res) {
         console.log('GET /settings');
         res.render('settings.ejs');
-    }
+    });
 
     app.get('/getAudio', function(req, res) {
         console.log('GET /getAudio');
