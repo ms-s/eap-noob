@@ -188,7 +188,7 @@
                     ContentList.forEach(function(audio) {
                         txt += "<li class='mdl-list__item mdl-list__item--three-line'" + " value-name='" +
                             audio['ContentName'].replace('\'', '') +
-                            "' value-url='" + audio['VideoURL'].replace('\'', '') +
+                            "' value-url='" + audio['URL'].replace('\'', '') +
                             "' onclick='playVideoStateless(this)'>";
                         txt += "<span class='mdl-list__item-primary-content'>";
                         txt += "<span>" + audio['ContentName'].substr(0, 20) + "</span>";
