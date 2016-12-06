@@ -451,25 +451,27 @@ module.exports = function(app, passport) {
         // wait for 500ms
         setTimeout(function() {
             serverDB = new sqlite3.Database(serverDBPath);
-            serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
-                UserID, ContentType, Source,
-                function(err, rows) {
-                    if (!err) {
-                        rows.forEach(function(row) {
-                            contentList.push({
-                                'ContentID': row.ContentID,
-                                'ContentName': row.ContentName,
-                                'URL': row.ContentURL
+            while(contentList.length == 0) {
+                serverDB.all('select ContentID, ContentName, ContentURL from ContentList where UserID = ? and ContentType = ? and Source = ?',
+                    UserID, ContentType, Source,
+                    function(err, rows) {
+                        if (!err) {
+                            rows.forEach(function(row) {
+                                contentList.push({
+                                    'ContentID': row.ContentID,
+                                    'ContentName': row.ContentName,
+                                    'URL': row.ContentURL
+                                });
                             });
-                        });
-                    } else {
-                        console.log('Error: ' + err);
+                        } else {
+                            console.log('Error: ' + err);
+                        }
+                        res.send(contentList);
                     }
-                    res.send(contentList);
-                }
-            );
+                );
+            }
             serverDB.close();
-        }, 5000);
+        }, 1000);
         // serverDB = new sqlite3.Database(serverDBPath);        
         // // serverDB.all('select UserID from User where UserName = ?', userName, function(err, userRows) {
         // // serverDB.all('select DeviceID, DeviceName, Image, Description from Device where UserID = ?', userID, function(err, deviceRows) {
