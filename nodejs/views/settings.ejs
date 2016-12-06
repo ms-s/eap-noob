@@ -1,0 +1,61 @@
+<!-- views/pages/speaker.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./head %>
+    <style>
+        .mdl-list__item:hover {
+            background: lightgrey;
+        }
+        .demo-card-notification.mdl-card {
+            height: 160px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Always shows a header, even in smaller screens. -->
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--no-drawer-button">
+    <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+            <!-- Title -->
+            <span class="mdl-layout-title"><%=DeviceName %></span>
+            <!-- Add spacer, to align navigation to the right -->
+            <div class="mdl-layout-spacer"></div>
+            <!-- Navigation. We hide it in small screens. -->
+            <button id="demo-menu-lower-right"
+                    class="mdl-button mdl-js-button mdl-button--icon">
+                <i class="material-icons">add</i>
+            </button>
+            <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
+                for="demo-menu-lower-right">
+                <li class="mdl-menu__item" onclick="gotoAddDevice()">Add Devices</li>
+                <li class="mdl-menu__item" onclick="gotoLogout()">Log Out</li>
+            </ul>
+        </div>
+    </header>
+    <main class="mdl-layout__content">
+        <div class="page-content">
+            <img src="http://vignette2.wikia.nocookie.net/blazingdragons/images/1/14/Under_Construction.png/revision/latest?cb=20140413050747">
+            <h2>Under Construction...</h2>
+        </div>
+    </main>
+
+    <% include ./footer-devices.ejs %>
+</div>
+</body>
+<script>
+    function gotoSettings() {
+        window.location = "/settings";
+    }
+
+    function gotoDevices() {
+        window.location = "/devices?userID=<%=UserID%>";
+    }
+
+    function gotoHome() {
+        window.location = "/profile";
+    }
+</script>
+
+</html>
