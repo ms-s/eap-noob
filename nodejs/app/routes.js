@@ -424,12 +424,27 @@ module.exports = function(app, passport) {
         serverDB.close();
     });
 
-    app.get('/settings', function(req, res) {
+    app.get('/settings', isLoggedIn, function(req, res) {
         console.log('GET /settings');
-        res.render('settings.ejs');
+        var userName = req.user.username;
+        var userID;
+        serverDB = new sqlite3.Database(serverDBPath);
+        serverDB.get('select UserID from User where UserName = ?', userName, function(err, row){
+            if (!err) {
+                if (row != undefined) {
+                    userID = row.UserID;
+                }
+            } else {
+                console.log('ERROR in /settings: ' + err);
+            }
+            res.render('settings.ejs',
+                    {UserID: userID}
+            );
+        });
+        serverDB.close();
     });
 
-    app.get('/getAudio', function(req, res) {
+    app.get('/getAudio', isLoggedIn, function(req, res) {
         console.log('GET /getAudio');
         // console.log('Query: ' + req);
 
